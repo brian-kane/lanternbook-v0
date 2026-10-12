@@ -1,0 +1,89 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gitleaks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # actions/checkout v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install gitleaks 8.30.1 (checksum verified)
+        run: |
+          curl -sSfL -o gitleaks.tar.gz https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz
+          echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  gitleaks.tar.gz" | sha256sum -c -
+          mkdir "$RUNNER_TEMP/gitleaks-bin"
+          tar -xzf gitleaks.tar.gz -C "$RUNNER_TEMP/gitleaks-bin" gitleaks
+          rm gitleaks.tar.gz
+      - name: Scan full history
+        run: |
+          "$RUNNER_TEMP/gitleaks-bin/gitleaks" git --redact --verbose --no-banner . 2>&1 | tee "$RUNNER_TEMP/gitleaks.log"
+          # A scan of zero commits is a failure, not a pass.
+          scanned=$(sed -n 's/.* \([0-9][0-9]*\) commits scanned.*/\1/p' "$RUNNER_TEMP/gitleaks.log" | tail -n 1)
+          expected=$(git rev-list --count HEAD)
+          echo "gitleaks scanned ${scanned:-?} commits; HEAD has $expected"
+          if [ -z "$scanned" ] || [ "$scanned" -lt 1 ]; then
+            echo "::error::gitleaks scanned no commits"
+            exit 1
+          fi
+          if [ "$scanned" -ne "$expected" ]; then
+            echo "::error::gitleaks scanned $scanned commits but HEAD has $expected"
+            exit 1
+          fi
+
+  actionlint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # actions/checkout v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install actionlint 1.7.12 (checksum verified)
+        run: |
+          curl -sSfL -o actionlint.tar.gz https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz
+          echo "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  actionlint.tar.gz" | sha256sum -c -
+          mkdir "$RUNNER_TEMP/actionlint-bin"
+          tar -xzf actionlint.tar.gz -C "$RUNNER_TEMP/actionlint-bin" actionlint
+          rm actionlint.tar.gz
+      - name: Lint workflow files
+        run: |
+          mapfile -t files < <(git ls-files '.github/workflows/*.yml' '.github/workflows/*.yaml')
+          echo "actionlint: ${#files[@]} workflow file(s)"
+          if [ "${#files[@]}" -lt 1 ]; then
+            echo "::error::no workflow files found to lint"
+            exit 1
+          fi
+          "$RUNNER_TEMP/actionlint-bin/actionlint" -verbose "${files[@]}"
+
+  prettier:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # actions/checkout v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Prettier check (md, json, yml)
+        run: |
+          mapfile -t files < <(git ls-files '*.md' '*.json' '*.yml' '*.yaml')
+          echo "prettier: ${#files[@]} file(s) matched"
+          if [ "${#files[@]}" -lt 1 ]; then
+            echo "::error::no md/json/yml files matched"
+            exit 1
+          fi
+          npx --yes prettier@3.9.10 --check "${files[@]}"
