@@ -32,6 +32,11 @@ These are GitHub settings to click through in the web UI. Nothing here is applie
   - Verify: from a clone, `git push --force origin HEAD:main` (after a harmless local amend) and `git push origin :main` are both rejected. Do not try these on a branch you care about; use a throwaway commit and expect rejection.
   - Later: required status checks (gitleaks, actionlint, prettier) force every change through a PR. Add them if we adopt PRs.
 
+- [x] **Require actions to be pinned to a full-length commit SHA** (turned on by you)
+  - Where: Actions, then General, then Actions permissions, then "Require actions to be pinned to a full-length commit SHA".
+  - Why: a tag such as `actions/checkout@v4` can be moved to different code. A SHA cannot.
+  - Verify: push a workflow that uses an action by tag. GitHub refuses to start it. Proven on 2026-10-12 with the throwaway branch `ci-plant/c-tag-ref` (now deleted): the run of `plant-tag` ended with conclusion `startup_failure`, had no jobs and no check runs ([run](https://github.com/brian-kane/lanternbook/actions/runs/38284835190)), while the SHA-pinned `CI` workflow on the same branch family ran normally. The exact wording of the refusal is on that run's page in the browser; the API does not return it.
+
 ## After there is code
 
 - [ ] **CodeQL default setup**: Code security, then Code scanning, then set up Default. Not useful until there is code to analyse.
