@@ -1,0 +1,7 @@
+# github-actions only for now. Add an "npm" ecosystem entry when package.json is added.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

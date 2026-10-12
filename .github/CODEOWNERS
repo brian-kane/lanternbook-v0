@@ -1,0 +1,7 @@
+* @brian-kane
+
+# Listed explicitly so they stay owned if the catch-all is ever narrowed.
+/.github/ @brian-kane
+/scripts/ @brian-kane
+/fixtures/ @brian-kane
+**/fixtures/ @brian-kane
