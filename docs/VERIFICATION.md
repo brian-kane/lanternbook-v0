@@ -25,3 +25,8 @@ Each CI job fails when it checks nothing (zero commits, zero workflows, zero fil
 - gitleaks: a fake secret from gitleaks' own documented examples must fail the job.
 - actionlint: a broken workflow file must fail the job.
 - prettier: a misformatted markdown file must fail the job.
+
+Findings from proving them:
+
+- The first gitleaks job passed a leak: GitHub's default `bash -e` has no `pipefail`, so `gitleaks | tee` hid the exit code. The step now sets `shell: bash`.
+- gitleaks scans every ref, not only the checked-out branch. While a plant branch holds a fake secret, the gitleaks job is red on every branch; delete the plant branch to clear it.
