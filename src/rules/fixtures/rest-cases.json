@@ -1,0 +1,296 @@
+[
+  {
+    "description": "a short rest refills only short-reset counters",
+    "rest": "short",
+    "before": [
+      {
+        "version": 1,
+        "kind": "counter",
+        "name": "Lantern oil flasks",
+        "value": 0,
+        "max": 3,
+        "reset": "long",
+        "id": 1
+      },
+      {
+        "version": 1,
+        "kind": "counter",
+        "name": "Lucky coin flips",
+        "value": 0,
+        "max": 2,
+        "reset": "short",
+        "id": 2
+      },
+      {
+        "version": 1,
+        "kind": "counter",
+        "name": "Rations",
+        "value": 1,
+        "max": 10,
+        "reset": "none",
+        "id": 3
+      },
+      {
+        "version": 1,
+        "kind": "checklist",
+        "name": "Before we leave town",
+        "items": [
+          {
+            "text": "Buy rope",
+            "done": false
+          },
+          {
+            "text": "Refill waterskins",
+            "done": false
+          },
+          {
+            "text": "Pay the innkeeper",
+            "done": true
+          }
+        ],
+        "id": 4
+      },
+      {
+        "version": 1,
+        "kind": "counter",
+        "name": "Spare torches",
+        "value": 5,
+        "max": 5,
+        "reset": "short",
+        "id": 5
+      }
+    ],
+    "after": [
+      {
+        "version": 1,
+        "kind": "counter",
+        "name": "Lantern oil flasks",
+        "value": 0,
+        "max": 3,
+        "reset": "long",
+        "id": 1
+      },
+      {
+        "version": 1,
+        "kind": "counter",
+        "name": "Lucky coin flips",
+        "value": 2,
+        "max": 2,
+        "reset": "short",
+        "id": 2
+      },
+      {
+        "version": 1,
+        "kind": "counter",
+        "name": "Rations",
+        "value": 1,
+        "max": 10,
+        "reset": "none",
+        "id": 3
+      },
+      {
+        "version": 1,
+        "kind": "checklist",
+        "name": "Before we leave town",
+        "items": [
+          {
+            "text": "Buy rope",
+            "done": false
+          },
+          {
+            "text": "Refill waterskins",
+            "done": false
+          },
+          {
+            "text": "Pay the innkeeper",
+            "done": true
+          }
+        ],
+        "id": 4
+      },
+      {
+        "version": 1,
+        "kind": "counter",
+        "name": "Spare torches",
+        "value": 5,
+        "max": 5,
+        "reset": "short",
+        "id": 5
+      }
+    ]
+  },
+  {
+    "description": "a long rest refills short- and long-reset counters, never none",
+    "rest": "long",
+    "before": [
+      {
+        "version": 1,
+        "kind": "counter",
+        "name": "Lantern oil flasks",
+        "value": 0,
+        "max": 3,
+        "reset": "long",
+        "id": 1
+      },
+      {
+        "version": 1,
+        "kind": "counter",
+        "name": "Lucky coin flips",
+        "value": 0,
+        "max": 2,
+        "reset": "short",
+        "id": 2
+      },
+      {
+        "version": 1,
+        "kind": "counter",
+        "name": "Rations",
+        "value": 1,
+        "max": 10,
+        "reset": "none",
+        "id": 3
+      },
+      {
+        "version": 1,
+        "kind": "checklist",
+        "name": "Before we leave town",
+        "items": [
+          {
+            "text": "Buy rope",
+            "done": false
+          },
+          {
+            "text": "Refill waterskins",
+            "done": false
+          },
+          {
+            "text": "Pay the innkeeper",
+            "done": true
+          }
+        ],
+        "id": 4
+      },
+      {
+        "version": 1,
+        "kind": "counter",
+        "name": "Spare torches",
+        "value": 5,
+        "max": 5,
+        "reset": "short",
+        "id": 5
+      }
+    ],
+    "after": [
+      {
+        "version": 1,
+        "kind": "counter",
+        "name": "Lantern oil flasks",
+        "value": 3,
+        "max": 3,
+        "reset": "long",
+        "id": 1
+      },
+      {
+        "version": 1,
+        "kind": "counter",
+        "name": "Lucky coin flips",
+        "value": 2,
+        "max": 2,
+        "reset": "short",
+        "id": 2
+      },
+      {
+        "version": 1,
+        "kind": "counter",
+        "name": "Rations",
+        "value": 1,
+        "max": 10,
+        "reset": "none",
+        "id": 3
+      },
+      {
+        "version": 1,
+        "kind": "checklist",
+        "name": "Before we leave town",
+        "items": [
+          {
+            "text": "Buy rope",
+            "done": false
+          },
+          {
+            "text": "Refill waterskins",
+            "done": false
+          },
+          {
+            "text": "Pay the innkeeper",
+            "done": true
+          }
+        ],
+        "id": 4
+      },
+      {
+        "version": 1,
+        "kind": "counter",
+        "name": "Spare torches",
+        "value": 5,
+        "max": 5,
+        "reset": "short",
+        "id": 5
+      }
+    ]
+  },
+  {
+    "description": "checklists are untouched by either rest, ticks included",
+    "rest": "long",
+    "before": [
+      {
+        "version": 1,
+        "kind": "checklist",
+        "name": "Before we leave town",
+        "items": [
+          {
+            "text": "Buy rope",
+            "done": false
+          },
+          {
+            "text": "Refill waterskins",
+            "done": false
+          },
+          {
+            "text": "Pay the innkeeper",
+            "done": true
+          }
+        ],
+        "id": 1
+      }
+    ],
+    "after": [
+      {
+        "version": 1,
+        "kind": "checklist",
+        "name": "Before we leave town",
+        "items": [
+          {
+            "text": "Buy rope",
+            "done": false
+          },
+          {
+            "text": "Refill waterskins",
+            "done": false
+          },
+          {
+            "text": "Pay the innkeeper",
+            "done": true
+          }
+        ],
+        "id": 1
+      }
+    ]
+  },
+  {
+    "description": "a rest on an empty board changes nothing",
+    "rest": "short",
+    "before": [],
+    "after": []
+  }
+]
