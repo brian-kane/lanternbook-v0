@@ -10,3 +10,12 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # Wait 7 days after a release before proposing it, the age pnpm's minimumReleaseAge will
+    # require (see docs/KNOWN-ISSUES.md).
+    cooldown:
+      default-days: 7
+    ignore:
+      # typescript-eslint caps its TypeScript peer range below 6.1.0, so minors break it as well
+      # as majors. Revisit when typescript-eslint supports TypeScript 7 (docs/KNOWN-ISSUES.md).
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major', 'version-update:semver-minor']
