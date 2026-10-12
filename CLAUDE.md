@@ -11,6 +11,8 @@ Working rules for this repository. It is public: never commit real player, campa
 
 ## Session defaults
 
+- At the start of a session, read [docs/VISION.md](docs/VISION.md).
+- If a request doesn't serve the guiding question in docs/VISION.md or the current slice in ROADMAP.md, say so and ask whether it's a conscious detour before building it.
 - Behavior changes: write the tests first and show them failing, then fix. Not needed for docs or config.
 - Before pushing code: run `pnpm lint`, `pnpm typecheck`, `pnpm test:ci` and `pnpm format:check`.
 - Setup: `scripts/setup.sh` installs the pinned gitleaks that the pre-commit hook needs; `pnpm install` installs the hooks.
