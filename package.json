@@ -18,7 +18,7 @@
     "format:check": "node scripts/format-check.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:ci": "vitest run --coverage --reporter=default --reporter=json --outputFile.json=coverage/test-results.json && node scripts/check-test-report.mjs",
+    "test:ci": "node scripts/test-ci.mjs",
     "perf": "node scripts/check-bundle-size.mjs",
     "audit:prod": "node scripts/check-audit.mjs",
     "prepare": "husky"

@@ -1,8 +1,9 @@
 // Reads the Vitest JSON and coverage summary written by `pnpm test:ci` and fails on empty results.
+import { reportError } from './ci-annotate.mjs';
 import { existsSync, readFileSync } from 'node:fs';
 
 function fail(message) {
-  console.error(`test report: ${message}`);
+  reportError(`test report: ${message}`);
   process.exit(1);
 }
 

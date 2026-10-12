@@ -1,5 +1,6 @@
 // vue-tsc strict typecheck. Fails if the tsconfig selects no source files (a tsconfig with
 // "files": [] passes instantly while checking nothing).
+import { reportError } from './ci-annotate.mjs';
 import { spawnSync } from 'node:child_process';
 
 function run(args) {
@@ -16,12 +17,15 @@ const sources = listed.stdout
   .split('\n')
   .filter((f) => f.includes('/src/') && !f.includes('node_modules'));
 if (sources.length === 0) {
-  console.error('typecheck: tsconfig selects no files under src/; refusing to pass');
+  reportError('typecheck: tsconfig selects no files under src/; refusing to pass');
   process.exit(1);
 }
 
 const checked = run(['--noEmit']);
 process.stdout.write(checked.stdout ?? '');
 process.stderr.write(checked.stderr ?? '');
-if (checked.status !== 0) process.exit(checked.status ?? 1);
+if (checked.status !== 0) {
+  reportError('typecheck: vue-tsc reported type errors');
+  process.exit(checked.status ?? 1);
+}
 console.log(`typecheck: ${sources.length} source files checked, no errors`);

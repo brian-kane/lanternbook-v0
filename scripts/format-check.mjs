@@ -1,4 +1,5 @@
 // Prettier over every tracked file Prettier supports. Fails if it matched nothing.
+import { reportError } from './ci-annotate.mjs';
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import * as prettier from 'prettier';
@@ -22,9 +23,12 @@ for (const file of tracked) {
 }
 
 if (checked === 0) {
-  console.error('format: Prettier matched no files; refusing to pass');
+  reportError('format: Prettier matched no files; refusing to pass');
   process.exit(1);
 }
 for (const f of bad) console.error(`[warn] ${f}`);
 console.log(`format: ${checked} files checked, ${bad.length} need formatting`);
-if (bad.length > 0) process.exit(1);
+if (bad.length > 0) {
+  reportError(`format: ${bad.length} files need formatting: ${bad.join(', ')}`);
+  process.exit(1);
+}

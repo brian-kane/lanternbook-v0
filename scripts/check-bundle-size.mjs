@@ -1,12 +1,13 @@
 // Measures the JavaScript that dist/index.html actually loads at startup (script tags and
 // modulepreload links, gzipped) and compares it with the ceiling in perf-budget.json.
 // Measuring a file-name pattern such as index-*.js instead would drift from what loads.
+import { reportError } from './ci-annotate.mjs';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { gzipSync } from 'node:zlib';
 
 function fail(message) {
-  console.error(`perf budget: ${message}`);
+  reportError(`perf budget: ${message}`);
   process.exit(1);
 }
 
