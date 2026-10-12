@@ -31,7 +31,7 @@ jobs:
           rm gitleaks.tar.gz
       - name: Scan full history
         run: |
-          "$RUNNER_TEMP/gitleaks-bin/gitleaks" git --redact --verbose --no-banner . 2>&1 | tee "$RUNNER_TEMP/gitleaks.log"
+          "$RUNNER_TEMP/gitleaks-bin/gitleaks" git --redact --verbose --no-banner --no-color . 2>&1 | tee "$RUNNER_TEMP/gitleaks.log"
           # A scan of zero commits is a failure, not a pass.
           scanned=$(sed -n 's/.* \([0-9][0-9]*\) commits scanned.*/\1/p' "$RUNNER_TEMP/gitleaks.log" | tail -n 1)
           expected=$(git rev-list --count HEAD)
