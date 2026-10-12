@@ -30,18 +30,20 @@ jobs:
           tar -xzf gitleaks.tar.gz -C "$RUNNER_TEMP/gitleaks-bin" gitleaks
           rm gitleaks.tar.gz
       - name: Scan full history
+        # Explicit shell: the default is `bash -e` without pipefail, which would hide gitleaks' exit code behind tee.
+        shell: bash
         run: |
           "$RUNNER_TEMP/gitleaks-bin/gitleaks" git --redact --verbose --no-banner --no-color . 2>&1 | tee "$RUNNER_TEMP/gitleaks.log"
           # A scan of zero commits is a failure, not a pass.
           scanned=$(sed -n 's/.* \([0-9][0-9]*\) commits scanned.*/\1/p' "$RUNNER_TEMP/gitleaks.log" | tail -n 1)
-          expected=$(git rev-list --count HEAD)
-          echo "gitleaks scanned ${scanned:-?} commits; HEAD has $expected"
+          expected=$(git rev-list --count --all)
+          echo "gitleaks scanned ${scanned:-?} commits; repo has $expected"
           if [ -z "$scanned" ] || [ "$scanned" -lt 1 ]; then
             echo "::error::gitleaks scanned no commits"
             exit 1
           fi
           if [ "$scanned" -ne "$expected" ]; then
-            echo "::error::gitleaks scanned $scanned commits but HEAD has $expected"
+            echo "::error::gitleaks scanned $scanned commits but the repo has $expected"
             exit 1
           fi
 
