@@ -47,9 +47,9 @@ jobs:
           expected=$(git log --no-merges --format='@@@%H' --numstat HEAD | awk '/^@@@/{if(c&&h)n++; c=1;h=0; next} NF>=3 && $1!="-" && ($1+$2)>0 {h=1} END{if(c&&h)n++; print n+0}')
           echo "gitleaks scanned ${scanned:-?} commits; ${expected} commits reachable from HEAD change text"
           if [ "$status" -ne 0 ]; then
-            for rule in $(sed -n 's/^RuleID: *//p' "$RUNNER_TEMP/gitleaks.log" | sort -u); do
+            while read -r rule; do
               echo "::error::gitleaks finding: rule ${rule}"
-            done
+            done < <(sed -n 's/^RuleID: *//p' "$RUNNER_TEMP/gitleaks.log" | sort -u)
             echo "::error::gitleaks exited with status ${status}"
             exit 1
           fi

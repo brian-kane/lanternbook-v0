@@ -4,7 +4,7 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-# shellcheck source=scripts/tool-versions.env
+# shellcheck disable=SC1091
 . "$root/scripts/tool-versions.env"
 
 bin_dir="${HOME}/.local/bin"
