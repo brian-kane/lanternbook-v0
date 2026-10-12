@@ -18,8 +18,8 @@ These are GitHub settings to click through in the web UI. Nothing here is applie
   - Where: Actions, then General, then Workflow permissions: "Read repository contents and packages permissions".
   - Why: a workflow that forgets to declare permissions gets no write access. [ci.yml](../.github/workflows/ci.yml) also declares `contents: read` itself.
   - Verify: the option is selected after saving and reload.
-- [ ] **Fork pull request workflows need approval**
-  - Where: Actions, then General, then Fork pull request workflows from outside collaborators: require approval for all outside collaborators.
+- [ ] **Fork pull request workflows need approval for all external contributors**
+  - Where: Actions, then General, then "Approval for running fork pull request workflows from contributors": "Require approval for all external contributors" (older UI: "Fork pull request workflows from outside collaborators", "Require approval for all outside collaborators").
   - Why: stops a stranger's PR from running workflows on this repo without a look first.
   - Verify: the option is selected after saving and reload.
 - [ ] **"Allow GitHub Actions to create and approve pull requests" is off**
@@ -35,7 +35,16 @@ These are GitHub settings to click through in the web UI. Nothing here is applie
 - [x] **Require actions to be pinned to a full-length commit SHA** (turned on by you)
   - Where: Actions, then General, then Actions permissions, then "Require actions to be pinned to a full-length commit SHA".
   - Why: a tag such as `actions/checkout@v4` can be moved to different code. A SHA cannot.
-  - Verify: push a workflow that uses an action by tag. GitHub refuses to start it. Proven on 2026-10-12 with the throwaway branch `ci-plant/c-tag-ref` (now deleted): the run of `plant-tag` ended with conclusion `startup_failure`, had no jobs and no check runs ([run](https://github.com/brian-kane/lanternbook/actions/runs/38284835190)), while the SHA-pinned `CI` workflow on the same branch family ran normally. The exact wording of the refusal is on that run's page in the browser; the API does not return it.
+  - Verify: push a workflow that uses an action by tag. GitHub refuses to start it. Proven on 2026-10-12 with the throwaway branch `ci-plant/c-tag-ref` (now deleted): the run of `plant-tag` ended with conclusion `startup_failure`, had no jobs and no check runs ([run](https://github.com/brian-kane/lanternbook/actions/runs/38284835190)), while the SHA-pinned `CI` workflow on the same branch family ran normally. The API does not return the refusal; the run page in the browser shows this annotation, recorded on 2026-10-12 (run 38284835190, branch `ci-plant/c-tag-ref`, commit `e1ff611`):
+
+    > The action actions/checkout@v4 is not allowed in brian-kane/lanternbook because all actions must be from a repository owned by brian-kane or created by GitHub. All actions must also be pinned to a full-length commit SHA.
+
+  - Which rule refused it: `actions/checkout` is created by GitHub, so the allow-list below permits it. The refusal came from the SHA-pinning requirement; the message names both rules because both are on.
+
+- [x] **Actions allow-list: this repository's owner and GitHub-created actions only**
+  - Where: Actions, then General, then Actions permissions: "Allow brian-kane, and select non-brian-kane, actions and reusable workflows", with "Allow actions created by GitHub" ticked and no other patterns listed.
+  - Why: a third-party action is code from a stranger running with this repo's token. Anything else needs a deliberate entry here first.
+  - Verify: the run C annotation above quotes this rule ("must be from a repository owned by brian-kane or created by GitHub"). A direct proof would be a SHA-pinned third-party action on a throwaway branch; GitHub should refuse to start it.
 
 ## After there is code
 
