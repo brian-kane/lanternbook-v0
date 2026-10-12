@@ -1,0 +1,7 @@
+pnpm-lock.yaml
+dist/
+coverage/
+dev-dist/
+.port-source/
+NOTICE
+LICENSE
