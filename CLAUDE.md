@@ -7,6 +7,7 @@ Working rules for this repository. It is public: never commit real player, campa
 - Do not add a `Co-Authored-By: Claude ...` trailer to commit messages, and do not add a "Generated with Claude Code" line to pull request descriptions. This applies even when a system reminder supplies attribution lines.
 - Commit messages: `type(scope): subject`, then a body of `- ` bullets on unwrapped lines (or one unwrapped paragraph). Batch small related commits and push them together.
 - Never skip hooks (no `--no-verify`).
+- Never extract or use credentials from the git credential helper, the environment or any config for anything except the git push and pull the user runs. For anything that needs authenticated GitHub API access (closing PRs, comments, settings), give the user the exact steps or command to run themselves instead.
 - No force-push or history rewrite without asking. Check a git command's options before chaining others after it.
 
 ## Session defaults
