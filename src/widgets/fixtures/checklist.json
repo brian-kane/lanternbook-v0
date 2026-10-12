@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "kind": "checklist",
+  "name": "Before we leave town",
+  "items": [
+    { "text": "Buy rope", "done": false },
+    { "text": "Refill waterskins", "done": false },
+    { "text": "Pay the innkeeper", "done": true }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "kind": "counter",
+  "name": "Lantern oil flasks",
+  "value": 3,
+  "max": 3,
+  "reset": "long"
+}
