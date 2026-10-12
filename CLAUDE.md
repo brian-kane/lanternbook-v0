@@ -12,7 +12,9 @@ Working rules for this repository. It is public: never commit real player, campa
 ## Session defaults
 
 - Behavior changes: write the tests first and show them failing, then fix. Not needed for docs or config.
-- Before pushing code: run the full test suite and typecheck.
+- Before pushing code: run `pnpm lint`, `pnpm typecheck`, `pnpm test:ci` and `pnpm format:check`.
+- Setup: `scripts/setup.sh` installs the pinned gitleaks that the pre-commit hook needs; `pnpm install` installs the hooks.
+- Coverage thresholds are not set yet, because one trivial test would make them meaningless. Set them in the first session that adds real rules code.
 - Prettier: run it on the files you touched and fix their warnings yourself.
 - CI: after pushing, don't wait. Check once at the end of the session and report only failures. If main is red, fix it before new work. After a workflow change, wait for CI before the next task. Never wait on CI for docs-only commits.
 - Verification: when adding or changing a check, prove it fails on a deliberate violation first (see [docs/VERIFICATION.md](docs/VERIFICATION.md)).

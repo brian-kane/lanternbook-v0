@@ -1,0 +1,16 @@
+name: Set up Node and pnpm
+description: Install the pinned Node version, enable the pinned pnpm through corepack, and install dependencies.
+runs:
+  using: composite
+  steps:
+    # actions/setup-node v7.1.0
+    - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+      with:
+        node-version-file: .nvmrc
+    - name: Install dependencies
+      shell: bash
+      run: |
+        corepack enable
+        node --version
+        pnpm --version
+        pnpm install --frozen-lockfile

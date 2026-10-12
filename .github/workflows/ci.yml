@@ -12,9 +12,12 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Every runner is pinned: ubuntu-latest moves to Ubuntu 26 from 2026-10-19 (actions/runner-images#14748).
+# Every job must fail if it examined nothing; the scripts it calls enforce that.
+
 jobs:
   gitleaks:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       # actions/checkout v7.0.1
@@ -22,43 +25,56 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Install gitleaks 8.30.1 (checksum verified)
+      - name: Install gitleaks (pinned, checksum verified)
         run: |
-          curl -sSfL -o gitleaks.tar.gz https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz
-          echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  gitleaks.tar.gz" | sha256sum -c -
+          . scripts/tool-versions.env
+          curl -sSfL -o gitleaks.tar.gz "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${GITLEAKS_SHA256_LINUX_X64}  gitleaks.tar.gz" | sha256sum -c -
           mkdir "$RUNNER_TEMP/gitleaks-bin"
           tar -xzf gitleaks.tar.gz -C "$RUNNER_TEMP/gitleaks-bin" gitleaks
           rm gitleaks.tar.gz
-      - name: Scan full history
+      - name: Scan history reachable from this commit
         # Explicit shell: the default is `bash -e` without pipefail, which would hide gitleaks' exit code behind tee.
         shell: bash
         run: |
-          "$RUNNER_TEMP/gitleaks-bin/gitleaks" git --redact --verbose --no-banner --no-color . 2>&1 | tee "$RUNNER_TEMP/gitleaks.log"
-          # A scan of zero commits is a failure, not a pass.
+          # --log-opts HEAD limits the scan to history reachable from the commit under test, so a secret
+          # on an unrelated branch cannot turn this run red. gitleaks only counts commits with changed text lines.
+          set +e
+          "$RUNNER_TEMP/gitleaks-bin/gitleaks" git --log-opts="HEAD" --redact --verbose --no-banner --no-color . 2>&1 | tee "$RUNNER_TEMP/gitleaks.log"
+          status=${PIPESTATUS[0]}
+          set -e
           scanned=$(sed -n 's/.* \([0-9][0-9]*\) commits scanned.*/\1/p' "$RUNNER_TEMP/gitleaks.log" | tail -n 1)
-          expected=$(git rev-list --count --all)
-          echo "gitleaks scanned ${scanned:-?} commits; repo has $expected"
+          expected=$(git log --no-merges --format='@@@%H' --numstat HEAD | awk '/^@@@/{if(c&&h)n++; c=1;h=0; next} NF>=3 && $1!="-" && ($1+$2)>0 {h=1} END{if(c&&h)n++; print n+0}')
+          echo "gitleaks scanned ${scanned:-?} commits; ${expected} commits reachable from HEAD change text"
+          if [ "$status" -ne 0 ]; then
+            for rule in $(sed -n 's/^RuleID: *//p' "$RUNNER_TEMP/gitleaks.log" | sort -u); do
+              echo "::error::gitleaks finding: rule ${rule}"
+            done
+            echo "::error::gitleaks exited with status ${status}"
+            exit 1
+          fi
           if [ -z "$scanned" ] || [ "$scanned" -lt 1 ]; then
             echo "::error::gitleaks scanned no commits"
             exit 1
           fi
           if [ "$scanned" -ne "$expected" ]; then
-            echo "::error::gitleaks scanned $scanned commits but the repo has $expected"
+            echo "::error::gitleaks scanned $scanned commits but $expected are reachable from HEAD"
             exit 1
           fi
 
   actionlint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       # actions/checkout v7.0.1
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - name: Install actionlint 1.7.12 (checksum verified)
+      - name: Install actionlint (pinned, checksum verified)
         run: |
-          curl -sSfL -o actionlint.tar.gz https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz
-          echo "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  actionlint.tar.gz" | sha256sum -c -
+          . scripts/tool-versions.env
+          curl -sSfL -o actionlint.tar.gz "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          echo "${ACTIONLINT_SHA256_LINUX_AMD64}  actionlint.tar.gz" | sha256sum -c -
           mkdir "$RUNNER_TEMP/actionlint-bin"
           tar -xzf actionlint.tar.gz -C "$RUNNER_TEMP/actionlint-bin" actionlint
           rm actionlint.tar.gz
@@ -73,19 +89,109 @@ jobs:
           "$RUNNER_TEMP/actionlint-bin/actionlint" -verbose "${files[@]}"
 
   prettier:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       # actions/checkout v7.0.1
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - name: Prettier check (md, json, yml)
+      - uses: ./.github/actions/setup
+      - name: Prettier check (every tracked file Prettier supports)
+        run: pnpm format:check
+
+  lint:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      # actions/checkout v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - name: ESLint and pre-commit hook check
+        run: pnpm lint
+
+  typecheck:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      # actions/checkout v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - name: vue-tsc
+        run: pnpm typecheck
+
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      # actions/checkout v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - name: Vitest with coverage over all of src
+        run: pnpm test:ci
+
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      # actions/checkout v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - name: Build
         run: |
-          mapfile -t files < <(git ls-files '*.md' '*.json' '*.yml' '*.yaml')
-          echo "prettier: ${#files[@]} file(s) matched"
-          if [ "${#files[@]}" -lt 1 ]; then
-            echo "::error::no md/json/yml files matched"
+          pnpm build
+          js_files=$(find dist -name '*.js' | wc -l)
+          echo "build: ${js_files} JavaScript files in dist"
+          if [ ! -s dist/index.html ] || [ "$js_files" -lt 1 ]; then
+            echo "::error::build produced no index.html or no JavaScript"
             exit 1
           fi
-          npx --yes prettier@3.9.10 --check "${files[@]}"
+
+  perf-budget:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      # actions/checkout v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - name: Build and check startup bundle size
+        run: |
+          pnpm build
+          pnpm perf
+
+  audit-prod:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      # actions/checkout v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - name: pnpm audit --prod (blocking)
+        run: pnpm audit:prod
+
+  audit-all:
+    # Non-blocking on purpose: dev-tool advisories should be visible but must not stop work on a
+    # dependency that never ships. Production advisories are blocked by audit-prod.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    continue-on-error: true
+    steps:
+      # actions/checkout v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - name: pnpm audit (all dependencies, non-blocking)
+        run: pnpm audit
