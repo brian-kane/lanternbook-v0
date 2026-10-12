@@ -19,3 +19,8 @@ updates:
       # as majors. Revisit when typescript-eslint supports TypeScript 7 (docs/KNOWN-ISSUES.md).
       - dependency-name: typescript
         update-types: ['version-update:semver-major', 'version-update:semver-minor']
+      # @types/node majors follow Node majors. Node is pinned to 24 (.nvmrc, package.json engines,
+      # the dev container image), so stay on @types/node 24.x. Minors stay on: they add types for
+      # APIs added in later Node 24 releases. Bump both together (docs/KNOWN-ISSUES.md).
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']

@@ -5,6 +5,10 @@
 - What: `typescript` stays at 6.0.3 because typescript-eslint 8.71.1 declares a peer range of `>=4.8.4 <6.1.0`. Dependabot ignores TypeScript major and minor updates, so only 6.0.x patches come through; see the comment in [.github/dependabot.yml](../.github/dependabot.yml).
 - Revisit: when typescript-eslint supports TypeScript 7 (its `peerDependencies.typescript` range includes 7), lift the Dependabot ignore and update both together. Whichever typescript-eslint release first allows 6.1 also ends the minor ignore.
 
+## @types/node stays on the Node major
+
+- Bump `@types/node` to a new major only together with the Node major in the dev container image, `.nvmrc` and `package.json` engines; Dependabot ignores its majors until then (see [.github/dependabot.yml](../.github/dependabot.yml)).
+
 ## pnpm comes from the image's global install, not from corepack
 
 - What: the base image puts its global pnpm 10.15.1 (`/usr/local/share/npm-global/bin`) ahead of `/usr/local/bin` on PATH, so the corepack shim that `sudo corepack enable` creates is never reached. The `packageManager` pin in package.json still applies, but through pnpm switching itself to 12.11.2 under `~/.local/share/pnpm/.tools/`, not through corepack.
