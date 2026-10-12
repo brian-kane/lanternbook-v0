@@ -1,0 +1,25 @@
+{
+  "name": "lanternbook",
+  // Node 24 is the active LTS line; the exact version is pinned in .nvmrc and package.json engines.
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:3-24-bookworm",
+  "remoteUser": "node",
+  "features": {
+    "ghcr.io/anthropics/devcontainer-features/claude-code:1.0.5": {}
+  },
+  "mounts": [
+    // Named volume so Claude's login and history survive container rebuilds.
+    "source=claude-config-${devcontainerId},target=/home/node/.claude,type=volume"
+  ],
+  "containerEnv": {
+    "CLAUDE_CONFIG_DIR": "/home/node/.claude"
+  },
+  // A fresh named volume is created root-owned; this is safe to repeat.
+  "onCreateCommand": "sudo chown -R node:node /home/node/.claude",
+  // pnpm is pinned by the packageManager field in package.json and provided through corepack.
+  "postCreateCommand": "sudo corepack enable && bash scripts/setup.sh && pnpm install --frozen-lockfile",
+  "customizations": {
+    "vscode": {
+      "extensions": ["Vue.volar", "dbaeumer.vscode-eslint", "esbenp.prettier-vscode"]
+    }
+  }
+}
