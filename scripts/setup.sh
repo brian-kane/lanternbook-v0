@@ -22,7 +22,22 @@ else
   trap 'rm -rf "$tmp"' EXIT
   url="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
   echo "Downloading $url"
-  curl -sSfL --retry 3 --max-time 120 -o "$tmp/gitleaks.tar.gz" "$url"
+  rc=0
+  curl -sSfL --retry 3 --max-time 120 -o "$tmp/gitleaks.tar.gz" "$url" || rc=$?
+  if [ "$rc" -eq 60 ]; then
+    # Never retry insecurely: the fix is to trust the network's CA, not to skip verification.
+    cat >&2 <<'EOF'
+
+setup.sh: this container does not trust the CA that signed github.com's certificate (curl exit 60).
+This usually means a TLS-inspecting proxy on your network re-signs HTTPS traffic. Confirm with:
+  openssl s_client -connect github.com:443 -servername github.com -showcerts </dev/null
+If the issuer is your proxy's CA, install that CA on the host and rebuild the dev container;
+the host CA mount does the rest. See docs/DEV-CONTAINER.md.
+EOF
+    exit "$rc"
+  elif [ "$rc" -ne 0 ]; then
+    exit "$rc"
+  fi
   echo "${GITLEAKS_SHA256_LINUX_X64}  $tmp/gitleaks.tar.gz" | sha256sum -c -
   tar -xzf "$tmp/gitleaks.tar.gz" -C "$tmp" gitleaks
   mkdir -p "$bin_dir"

@@ -8,13 +8,20 @@
   },
   "mounts": [
     // Named volume so Claude's login and history survive container rebuilds.
-    "source=claude-config-${devcontainerId},target=/home/node/.claude,type=volume"
+    "source=claude-config-${devcontainerId},target=/home/node/.claude,type=volume",
+    // Host CA certificates, for networks behind a TLS-inspecting proxy (docs/DEV-CONTAINER.md).
+    // The parent is mounted because it exists on any Linux or WSL host, so a host without a
+    // ca-certificates directory still starts. Read-only, and never over the container's own CAs.
+    "source=/usr/local/share,target=/mnt/host-usr-local-share,type=bind,readonly"
   ],
   "containerEnv": {
-    "CLAUDE_CONFIG_DIR": "/home/node/.claude"
+    "CLAUDE_CONFIG_DIR": "/home/node/.claude",
+    // Corepack, pnpm and npm ignore the system store unless Node is pointed at it.
+    "NODE_EXTRA_CA_CERTS": "/etc/ssl/certs/ca-certificates.crt"
   },
-  // A fresh named volume is created root-owned; this is safe to repeat.
-  "onCreateCommand": "sudo chown -R node:node /home/node/.claude",
+  // Host CAs first, so every later download trusts them. A fresh named volume is created
+  // root-owned; both steps are safe to repeat.
+  "onCreateCommand": "sudo bash .devcontainer/install-host-ca.sh /mnt/host-usr-local-share/ca-certificates && sudo chown -R node:node /home/node/.claude",
   // pnpm is pinned by the packageManager field in package.json and provided through corepack.
   "postCreateCommand": "sudo corepack enable && bash scripts/setup.sh && pnpm install --frozen-lockfile",
   "customizations": {

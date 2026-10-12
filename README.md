@@ -20,4 +20,4 @@ This is a personal project and I'm not looking for contributions. To report a se
 
 ## Process
 
-Working rules are in [CLAUDE.md](CLAUDE.md) and [docs/VERIFICATION.md](docs/VERIFICATION.md). The GitHub settings I rely on are listed in [docs/REPO-SETTINGS.md](docs/REPO-SETTINGS.md).
+Working rules are in [CLAUDE.md](CLAUDE.md) and [docs/VERIFICATION.md](docs/VERIFICATION.md). The GitHub settings I rely on are listed in [docs/REPO-SETTINGS.md](docs/REPO-SETTINGS.md). Dev container setup behind a TLS-inspecting proxy is in [docs/DEV-CONTAINER.md](docs/DEV-CONTAINER.md).
