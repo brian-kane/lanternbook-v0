@@ -68,4 +68,4 @@ A pasted spell is one JSON object like this (an invented spell). `level` is 0 fo
 }
 ```
 
-A private class list is a class name plus spell names, one per line. Choosing that class in the class filter then shows those spells as well as any spell whose `classes` names it. Names are matched ignoring case and curly or straight apostrophes. Any name that matches no SRD spell and none of your private spells is listed under the class list as not found, never dropped silently.
+Prepared spells are the private class list named `Prepared`: edit it in the sidebar (one name per line), click a name there to open that spell, and pick **Prepared (private list)** in the class filter to see them all. A private class list is a class name plus spell names, one per line. Choosing that class in the class filter then shows those spells as well as any spell whose `classes` names it. Names are matched ignoring case and curly or straight apostrophes. Any name that matches no SRD spell and none of your private spells is listed under the class list as not found, never dropped silently.

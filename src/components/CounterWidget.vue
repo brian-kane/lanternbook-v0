@@ -1,8 +1,24 @@
 <script setup lang="ts">
+import { ref } from 'vue';
+import { parseAmount, type HpChange } from '../board/board';
 import type { CounterSpec } from '../widgets/spec';
 
 defineProps<{ widget: CounterSpec }>();
-const emit = defineEmits<{ step: [delta: 1 | -1] }>();
+const emit = defineEmits<{ step: [delta: 1 | -1]; hp: [change: HpChange, amount: number] }>();
+
+// Hit points counters also take damage and healing by a typed amount.
+const amountText = ref('');
+const amountError = ref<string | null>(null);
+function changeBy(change: HpChange) {
+  const result = parseAmount(amountText.value);
+  if (!result.ok) {
+    amountError.value = result.error;
+    return;
+  }
+  amountError.value = null;
+  amountText.value = '';
+  emit('hp', change, result.amount);
+}
 
 const RESET_LABELS = {
   short: 'Refills on a short or long rest',
@@ -31,6 +47,23 @@ const RESET_LABELS = {
       +
     </button>
   </div>
+  <div v-if="widget.hp" class="amount">
+    <input
+      v-model="amountText"
+      :aria-label="`Amount for ${widget.name}`"
+      inputmode="numeric"
+      autocomplete="off"
+      placeholder="Amount"
+      @keydown.enter="changeBy('damage')"
+    />
+    <button type="button" :aria-label="`Damage ${widget.name}`" @click="changeBy('damage')">
+      Damage
+    </button>
+    <button type="button" :aria-label="`Heal ${widget.name}`" @click="changeBy('heal')">
+      Heal
+    </button>
+  </div>
+  <p v-if="amountError" class="amount-error" role="alert">{{ amountError }}</p>
   <p class="hint">{{ RESET_LABELS[widget.reset] }}</p>
 </template>
 
@@ -49,5 +82,20 @@ const RESET_LABELS = {
   text-align: center;
   font-size: 1.4rem;
   font-variant-numeric: tabular-nums;
+}
+.amount {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+.amount input {
+  width: 6ch;
+  min-height: 2.75rem;
+  font: inherit;
+  font-size: 1rem;
+}
+.amount-error {
+  margin: 0.25rem 0 0;
+  color: var(--error);
 }
 </style>

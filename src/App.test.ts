@@ -2,7 +2,9 @@ import { flushPromises, mount, type VueWrapper } from '@vue/test-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import counterText from './widgets/fixtures/counter.json?raw';
 import checklistText from './widgets/fixtures/checklist.json?raw';
+import hpText from './widgets/fixtures/hp-counter.json?raw';
 import { STORAGE_KEY } from './board/storage';
+import { SPELLS_KEY } from './spells/store';
 import App from './App.vue';
 
 // Tests use invented spells only: the bundled SRD data is swapped for the fixture spells.
@@ -49,7 +51,9 @@ describe('App', () => {
     ]);
     expect(widgets[0]!.get('.counter-value').text()).toBe('3 / 3');
     expect(widgets[1]!.findAll('input[type="checkbox"]')).toHaveLength(3);
-    expect((wrapper.get('textarea').element as HTMLTextAreaElement).value).toBe('');
+    expect(
+      (wrapper.get('textarea[aria-label="Widget spec"]').element as HTMLTextAreaElement).value,
+    ).toBe('');
   });
 
   it('shows readable errors for a bad spec, adds nothing and keeps the text', async () => {
@@ -60,7 +64,9 @@ describe('App', () => {
       'kind must be "counter" or "checklist", not "timer".',
     );
     expect(wrapper.findAll('.widget')).toHaveLength(0);
-    expect((wrapper.get('textarea').element as HTMLTextAreaElement).value).toBe(bad);
+    expect(
+      (wrapper.get('textarea[aria-label="Widget spec"]').element as HTMLTextAreaElement).value,
+    ).toBe(bad);
   });
 
   it('undoes the last add or rest in one tap, including the steps and ticks since', async () => {
@@ -173,5 +179,171 @@ describe('App tabs', () => {
     await flushPromises();
     expect(tab(wrapper, 'Spells').attributes('aria-selected')).toBe('true');
     expect(wrapper.find('.spell-view').exists()).toBe(true);
+  });
+});
+
+describe('sidebar', () => {
+  const tab = (wrapper: VueWrapper, label: string) =>
+    wrapper.findAll('[role="tab"]').find((t) => t.text() === label)!;
+  const sidebar = (wrapper: VueWrapper) => wrapper.get('aside.sidebar');
+  const hpValue = (wrapper: VueWrapper) =>
+    sidebar(wrapper)
+      .findAll('.widget')
+      .find((w) => w.get('h2').text() === 'Hit points')!
+      .get('.counter-value')
+      .text();
+  async function hit(wrapper: VueWrapper, change: 'Damage' | 'Heal', amount: string) {
+    await wrapper.get('input[aria-label="Amount for Hit points"]').setValue(amount);
+    await button(wrapper, `${change} Hit points`).trigger('click');
+  }
+  const slots = JSON.stringify({
+    version: 1,
+    kind: 'counter',
+    name: 'Level 1 slots',
+    value: 4,
+    max: 4,
+    reset: 'long',
+  });
+  const wildShape = JSON.stringify({
+    version: 1,
+    kind: 'counter',
+    name: 'Wild Shape uses',
+    value: 2,
+    max: 2,
+    reset: 'short',
+  });
+
+  it('holds the widgets, rests and Undo beside both tabs', async () => {
+    const wrapper = mount(App);
+    await add(wrapper, hpText);
+    for (const label of ['Board', 'Spells']) {
+      await tab(wrapper, label).trigger('click');
+      await vi.dynamicImportSettled();
+      await flushPromises();
+      expect(
+        sidebar(wrapper)
+          .findAll('.widget')
+          .map((w) => w.get('h2').text()),
+      ).toStrictEqual(['Hit points']);
+      expect(sidebar(wrapper).find('button.undo').exists()).toBe(true);
+      expect(
+        sidebar(wrapper)
+          .findAll('button')
+          .some((b) => b.text() === 'Long rest'),
+      ).toBe(true);
+      expect(sidebar(wrapper).find('input[aria-label="Amount for Hit points"]').exists()).toBe(
+        true,
+      );
+    }
+    expect(wrapper.find('.spell-view').exists()).toBe(true);
+  });
+
+  it('applies typed damage and healing, clamped to 0 and max, each undoable', async () => {
+    const wrapper = mount(App);
+    await add(wrapper, hpText);
+    await hit(wrapper, 'Damage', '7');
+    expect(hpValue(wrapper)).toBe('20 / 27');
+    expect(undoButton(wrapper).text()).toBe('Undo damage 7: Hit points');
+    await hit(wrapper, 'Heal', '30');
+    expect(hpValue(wrapper)).toBe('27 / 27');
+    await hit(wrapper, 'Damage', '999');
+    expect(hpValue(wrapper)).toBe('0 / 27');
+    await undoButton(wrapper).trigger('click');
+    expect(hpValue(wrapper)).toBe('27 / 27');
+    await undoButton(wrapper).trigger('click');
+    expect(hpValue(wrapper)).toBe('20 / 27');
+    await button(wrapper, 'Decrease Hit points').trigger('click');
+    expect(hpValue(wrapper)).toBe('19 / 27');
+  });
+
+  it.each(['abc', '-3', '0', '2.5', ''])('refuses the amount %j with a message', async (amount) => {
+    const wrapper = mount(App);
+    await add(wrapper, hpText);
+    await hit(wrapper, 'Damage', amount);
+    expect(sidebar(wrapper).get('[role="alert"]').text()).toBe(
+      'Type a whole number from 1 to 999.',
+    );
+    expect(hpValue(wrapper)).toBe('27 / 27');
+  });
+
+  it('shows Damage and Heal only on counters marked as hit points', async () => {
+    const wrapper = mount(App);
+    await add(wrapper, slots);
+    expect(sidebar(wrapper).find('input[aria-label^="Amount for"]').exists()).toBe(false);
+  });
+
+  it('refills slots and resources by their reset on short and long rests', async () => {
+    const wrapper = mount(App);
+    await add(wrapper, slots);
+    await add(wrapper, wildShape);
+    for (const name of ['Level 1 slots', 'Wild Shape uses']) {
+      await button(wrapper, `Decrease ${name}`).trigger('click');
+    }
+    const values = () =>
+      sidebar(wrapper)
+        .findAll('.counter-value')
+        .map((v) => v.text());
+    expect(values()).toStrictEqual(['3 / 4', '1 / 2']);
+    await button(wrapper, 'Short rest').trigger('click');
+    expect(values()).toStrictEqual(['3 / 4', '2 / 2']);
+    await button(wrapper, 'Long rest').trigger('click');
+    expect(values()).toStrictEqual(['4 / 4', '2 / 2']);
+  });
+
+  it('keeps pasted prepared spells as the Prepared list, reporting names not found', async () => {
+    const wrapper = mount(App);
+    await wrapper
+      .get('textarea[aria-label="Prepared spell names"]')
+      .setValue('pebble count\nNot A Spell\nLantern Hum');
+    await wrapper.get('button.save-prepared').trigger('click');
+    await vi.dynamicImportSettled();
+    await flushPromises();
+    const prepared = sidebar(wrapper).get('.prepared');
+    expect(prepared.findAll('button.prepared-spell').map((b) => b.text())).toStrictEqual([
+      'pebble count',
+      'Lantern Hum',
+    ]);
+    expect(prepared.get('.prepared-unmatched').text()).toBe(
+      'Not found in the SRD or your private spells: Not A Spell',
+    );
+    expect(JSON.parse(localStorage.getItem(SPELLS_KEY)!).classLists).toStrictEqual({
+      Prepared: ['pebble count', 'Not A Spell', 'Lantern Hum'],
+    });
+  });
+
+  it('opens the card of the prepared spell that is clicked', async () => {
+    const wrapper = mount(App);
+    await wrapper
+      .get('textarea[aria-label="Prepared spell names"]')
+      .setValue('Lantern Hum\nPebble Count');
+    await wrapper.get('button.save-prepared').trigger('click');
+    await vi.dynamicImportSettled();
+    await flushPromises();
+    const spellButton = (name: string) =>
+      sidebar(wrapper)
+        .findAll('button.prepared-spell')
+        .find((b) => b.text() === name)!;
+    await spellButton('Pebble Count').trigger('click');
+    await vi.dynamicImportSettled();
+    await flushPromises();
+    expect(tab(wrapper, 'Spells').attributes('aria-selected')).toBe('true');
+    expect(wrapper.findAll('.spell-card h2').map((h) => h.text())).toStrictEqual(['Pebble Count']);
+    await spellButton('Lantern Hum').trigger('click');
+    await flushPromises();
+    expect(wrapper.findAll('.spell-card h2').map((h) => h.text())).toStrictEqual(['Lantern Hum']);
+    await wrapper.get('button.show-all').trigger('click');
+    expect(wrapper.findAll('.spell-card').length).toBe(5);
+  });
+
+  it('starts with notices instead of crashing when both stores hold corrupt data', async () => {
+    localStorage.setItem(STORAGE_KEY, '{"widgets": [');
+    localStorage.setItem(SPELLS_KEY, '{"spells": [');
+    const wrapper = mount(App);
+    await flushPromises();
+    const notices = wrapper.findAll('[role="status"]').map((n) => n.text());
+    expect(notices.some((n) => n.includes("Saved widgets couldn't be read"))).toBe(true);
+    expect(notices.some((n) => n.includes("Saved private spells couldn't be read"))).toBe(true);
+    expect(sidebar(wrapper).findAll('.widget')).toHaveLength(0);
+    expect(sidebar(wrapper).findAll('button.prepared-spell')).toHaveLength(0);
   });
 });

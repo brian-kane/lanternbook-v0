@@ -2,6 +2,7 @@
 // Draws one widget and contains its failures: if the widget's data breaks rendering, this frame
 // shows a placeholder and the rest of the board keeps working.
 import { onErrorCaptured, ref, watch } from 'vue';
+import type { HpChange } from '../board/board';
 import type { Widget } from '../widgets/spec';
 import ChecklistWidget from './ChecklistWidget.vue';
 import CounterWidget from './CounterWidget.vue';
@@ -10,6 +11,7 @@ const props = defineProps<{ widget: Widget }>();
 const emit = defineEmits<{
   step: [id: number, delta: 1 | -1];
   toggle: [id: number, index: number];
+  hp: [id: number, change: HpChange, amount: number];
 }>();
 
 const failed = ref(false);
@@ -31,6 +33,7 @@ onErrorCaptured(() => {
       v-else-if="widget.kind === 'counter'"
       :widget="widget"
       @step="(delta) => emit('step', widget.id, delta)"
+      @hp="(change, amount) => emit('hp', widget.id, change, amount)"
     />
     <ChecklistWidget
       v-else-if="widget.kind === 'checklist'"

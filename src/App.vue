@@ -1,17 +1,18 @@
 <script setup lang="ts">
-import { computed, defineAsyncComponent, ref, shallowRef } from 'vue';
-import WidgetFrame from './components/WidgetFrame.vue';
+import { defineAsyncComponent, provide, ref, shallowRef } from 'vue';
+import TableSidebar from './components/TableSidebar.vue';
 import {
   addWidget,
+  changeHp,
   restBoard,
   stepCounter,
   toggleItem,
   undo,
-  undoLabel,
   type Board,
 } from './board/board';
 import { browserStore } from './board/storage';
 import type { RestKind } from './rules/rest';
+import { PRIVATE_SPELLS, createPrivateSpellsState } from './spells/private-state';
 import { parseSpecText } from './widgets/spec';
 
 // Loaded only when the Spells tab opens, so the spell view and the SRD data stay out of startup.
@@ -20,8 +21,11 @@ const SpellView = defineAsyncComponent(() => import('./components/SpellView.vue'
 type Tab = 'board' | 'spells';
 const SPELLS_HASH = '#spells';
 const tab = ref<Tab>(location.hash === SPELLS_HASH ? 'spells' : 'board');
+/** The spell the sidebar asked to open; null shows the whole spell list. */
+const openSpell = ref<string | null>(null);
 function show(next: Tab) {
   tab.value = next;
+  if (next === 'board') openSpell.value = null;
   // The hash makes the spell view linkable; it is not a router.
   const url = next === 'spells' ? SPELLS_HASH : location.pathname + location.search;
   history.replaceState(null, '', url);
@@ -53,32 +57,55 @@ function add() {
 }
 
 const rest = (kind: RestKind) => apply(restBoard(board.value, kind));
-const undoText = computed(() => undoLabel(board.value));
+
+// Private spells and the prepared list, shared by the sidebar and the spell view.
+const privateSpells = createPrivateSpellsState();
+provide(PRIVATE_SPELLS, privateSpells);
+
+function open(name: string) {
+  openSpell.value = name;
+  show('spells');
+}
 </script>
 
 <template>
-  <main :class="{ wide: tab === 'spells' }">
-    <header class="top">
-      <h1>lanternbook</h1>
-      <nav class="tabs" role="tablist" aria-label="Views">
-        <button
-          v-for="t in ['board', 'spells'] as const"
-          :key="t"
-          type="button"
-          role="tab"
-          :aria-selected="tab === t ? 'true' : 'false'"
-          @click="show(t)"
-        >
-          {{ t === 'board' ? 'Board' : 'Spells' }}
-        </button>
-      </nav>
-    </header>
+  <div class="layout">
+    <aside class="sidebar" aria-label="Character">
+      <TableSidebar
+        :board="board"
+        @step="(id, delta) => apply(stepCounter(board, id, delta))"
+        @toggle="(id, index) => apply(toggleItem(board, id, index))"
+        @hp="(id, change, amount) => apply(changeHp(board, id, change, amount))"
+        @rest="rest"
+        @undo="apply(undo(board))"
+        @open="open"
+      />
+    </aside>
 
-    <SpellView v-if="tab === 'spells'" />
-    <template v-else>
+    <main>
+      <header class="top">
+        <h1>lanternbook</h1>
+        <nav class="tabs" role="tablist" aria-label="Views">
+          <button
+            v-for="t in ['board', 'spells'] as const"
+            :key="t"
+            type="button"
+            role="tab"
+            :aria-selected="tab === t ? 'true' : 'false'"
+            @click="show(t)"
+          >
+            {{ t === 'board' ? 'Board' : 'Spells' }}
+          </button>
+        </nav>
+      </header>
+
       <p v-if="notice" class="notice" role="status">{{ notice }}</p>
+      <p v-if="privateSpells.notice.value" class="notice" role="status">
+        {{ privateSpells.notice.value }}
+      </p>
 
-      <div class="add-form">
+      <SpellView v-if="tab === 'spells'" :open="openSpell" @close="openSpell = null" />
+      <div v-else class="add-form">
         <label for="spec">Paste a widget spec (see docs/EXAMPLES.md)</label>
         <textarea
           id="spec"
@@ -94,27 +121,8 @@ const undoText = computed(() => undoLabel(board.value));
           <li v-for="(error, i) in errors" :key="i">{{ error }}</li>
         </ul>
       </div>
-
-      <p v-if="board.widgets.length === 0" class="hint">No widgets yet.</p>
-      <div class="widgets">
-        <WidgetFrame
-          v-for="widget in board.widgets"
-          :key="widget.id"
-          :widget="widget"
-          @step="(id, delta) => apply(stepCounter(board, id, delta))"
-          @toggle="(id, index) => apply(toggleItem(board, id, index))"
-        />
-      </div>
-
-      <nav class="actions" aria-label="Board actions">
-        <button type="button" @click="rest('short')">Short rest</button>
-        <button type="button" @click="rest('long')">Long rest</button>
-        <button type="button" class="undo" :disabled="!undoText" @click="apply(undo(board))">
-          {{ undoText ?? 'Undo' }}
-        </button>
-      </nav>
-    </template>
-  </main>
+    </main>
+  </div>
 </template>
 
 <style>
@@ -149,15 +157,27 @@ button {
 </style>
 
 <style scoped>
-main {
-  max-width: 36rem;
-  margin: 0 auto;
-  padding: 1rem 1rem 0;
+.layout {
   display: grid;
-  gap: 1rem;
+  grid-template-columns: 20rem minmax(0, 1fr);
+  min-height: 100vh;
 }
-main.wide {
+.sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 1rem;
+  border-right: 1px solid var(--line);
+}
+main {
+  min-width: 0;
   max-width: 80rem;
+  padding: 1rem;
+  display: grid;
+  align-content: start;
+  gap: 1rem;
 }
 .top {
   display: flex;
@@ -187,6 +207,7 @@ h1 {
 .add-form {
   display: grid;
   gap: 0.5rem;
+  max-width: 36rem;
 }
 textarea {
   width: 100%;
@@ -201,29 +222,20 @@ textarea {
   padding-left: 1.25rem;
   color: var(--error);
 }
-.widgets {
-  display: grid;
-  gap: 0.75rem;
-}
-.actions {
-  position: sticky;
-  bottom: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  padding: 0.75rem 0 calc(0.75rem + env(safe-area-inset-bottom, 0px));
-  background: var(--bg);
-  border-top: 1px solid var(--line);
-}
-.actions button {
-  flex: 1 1 6rem;
-}
-.actions .undo {
-  flex-basis: 100%;
-  overflow-wrap: anywhere;
-}
 :deep(.hint) {
   margin: 0.5rem 0 0;
   opacity: 0.75;
+}
+/* Narrow screens: the sidebar stacks above the tabs. */
+@media (max-width: 48rem) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+  .sidebar {
+    position: static;
+    height: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
 }
 </style>
