@@ -52,6 +52,13 @@ export function addWidget(board: Board, spec: WidgetSpec): Board {
   return snapshot(board, { kind: 'add', name: spec.name }, [...board.widgets, { ...spec, id }]);
 }
 
+/** Adds several widgets as one undo step, labelled "Undo add: <label>". */
+export function addWidgets(board: Board, specs: readonly WidgetSpec[], label: string): Board {
+  const first = Math.max(0, ...board.widgets.map((w) => w.id)) + 1;
+  const added = specs.map((spec, i) => ({ ...spec, id: first + i }) as Widget);
+  return snapshot(board, { kind: 'add', name: label }, [...board.widgets, ...added]);
+}
+
 /**
  * The −/+ buttons. On a hit points counter they are damage 1 and heal 1 by the hit point rule,
  * with the same undo snapshot as a typed amount; other counters step without a snapshot.

@@ -61,7 +61,7 @@ A saved hit points counter may carry `"temp"` (a whole number from 0 to 999); wi
 }
 ```
 
-Spell slots and other resources are plain counters, one per slot level, such as `"name": "Level 1 slots"` with `"reset": "long"` (or `"short"` for slots that come back on a short rest).
+Spell slots and other resources are plain counters, one per slot level, such as `"name": "Level 1 slots"` with `"reset": "long"` (or `"short"` for slots that come back on a short rest). The **Spell slots** form on the Board tab makes them for you: type a max for each level you have (leave the others blank), choose what refills them, and press **Add spell slots**. They start full and are added as one undo step (**Undo add: spell slots**). A level that already has a counter of that name is reported and left as it is.
 
 ## Undo
 

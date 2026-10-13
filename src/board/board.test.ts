@@ -6,6 +6,7 @@ import type { WidgetSpec } from '../widgets/spec';
 import {
   HISTORY_LIMIT,
   addWidget,
+  addWidgets,
   changeHp,
   emptyBoard,
   restBoard,
@@ -309,4 +310,29 @@ describe('amounts of 0', () => {
       expect(changeHp(board, 1, change, 0)).toBe(board);
     },
   );
+});
+
+describe('addWidgets', () => {
+  const slots = [1, 2, 3].map(
+    (level) => ({ ...counter, name: `Level ${level} slots` }) as WidgetSpec,
+  );
+
+  it('adds several widgets as one undo step with one label', () => {
+    const before = addWidget(emptyBoard(), checklist);
+    const board = addWidgets(before, slots, 'spell slots');
+    expect(board.widgets.map((w) => [w.id, w.name])).toStrictEqual([
+      [1, 'Before we leave town'],
+      [2, 'Level 1 slots'],
+      [3, 'Level 2 slots'],
+      [4, 'Level 3 slots'],
+    ]);
+    expect(board.history).toHaveLength(before.history.length + 1);
+    expect(undoLabel(board)).toBe('Undo add: spell slots');
+    expect(undo(board)).toStrictEqual(before);
+  });
+
+  it('changes nothing when there is nothing to add', () => {
+    const board = addWidget(emptyBoard(), checklist);
+    expect(addWidgets(board, [], 'spell slots')).toBe(board);
+  });
 });

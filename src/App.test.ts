@@ -502,3 +502,71 @@ describe('New counter form', () => {
     expect(wrapper.find('textarea[aria-label="Widget spec"]').exists()).toBe(true);
   });
 });
+
+describe('Spell slots form', () => {
+  async function submitSlots(wrapper: VueWrapper, maxes: Record<number, string>, reset?: string) {
+    const form = wrapper.get('form.spell-slots');
+    for (const [level, max] of Object.entries(maxes)) {
+      await form.get(`input[name="slot-${level}"]`).setValue(max);
+    }
+    if (reset) await form.get('select[name="slots-reset"]').setValue(reset);
+    await form.trigger('submit');
+  }
+  const widgets = (wrapper: VueWrapper) =>
+    wrapper
+      .get('aside.sidebar')
+      .findAll('.widget')
+      .map((w) => [w.get('h2').text(), w.get('.counter-value').text()]);
+
+  it('adds a full counter per filled level as one undo step', async () => {
+    const wrapper = mount(App);
+    await submitSlots(wrapper, { 1: '4', 2: '3', 3: '2' });
+    expect(widgets(wrapper)).toStrictEqual([
+      ['Level 1 slots', '4 / 4'],
+      ['Level 2 slots', '3 / 3'],
+      ['Level 3 slots', '2 / 2'],
+    ]);
+    expect(undoButton(wrapper).text()).toBe('Undo add: spell slots');
+    await undoButton(wrapper).trigger('click');
+    expect(widgets(wrapper)).toStrictEqual([]);
+  });
+
+  it('refills them on a short rest when chosen', async () => {
+    const wrapper = mount(App);
+    await submitSlots(wrapper, { 1: '2' }, 'short');
+    expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!).widgets[0].reset).toBe('short');
+  });
+
+  it('reports an existing level next to its row, keeps it as it is, and adds the rest', async () => {
+    const wrapper = mount(App);
+    await submitSlots(wrapper, { 1: '4' });
+    await button(wrapper, 'Decrease Level 1 slots').trigger('click');
+    await submitSlots(wrapper, { 1: '9', 4: '1' });
+    expect(widgets(wrapper)).toStrictEqual([
+      ['Level 1 slots', '3 / 4'],
+      ['Level 4 slots', '1 / 1'],
+    ]);
+    expect(wrapper.get('#slot-1-message').text()).toBe(
+      'You already have a counter named “Level 1 slots”, so nothing was added for level 1.',
+    );
+  });
+
+  it('shows plain messages next to the rows and adds nothing when a row is wrong', async () => {
+    const wrapper = mount(App);
+    await submitSlots(wrapper, { 1: '4', 2: 'two' });
+    expect(wrapper.get('#slot-2-message').text()).toBe('Max must be a whole number from 1 to 999.');
+    expect(wrapper.get('input[name="slot-2"]').attributes('aria-describedby')).toBe(
+      'slot-2-message',
+    );
+    expect(widgets(wrapper)).toStrictEqual([]);
+    expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
+  });
+
+  it('asks for at least one level', async () => {
+    const wrapper = mount(App);
+    await submitSlots(wrapper, {});
+    expect(wrapper.get('form.spell-slots .form-error').text()).toBe(
+      'Fill in a max for at least one spell level.',
+    );
+  });
+});

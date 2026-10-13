@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { defineAsyncComponent, provide, ref, shallowRef } from 'vue';
+import { computed, defineAsyncComponent, provide, ref, shallowRef } from 'vue';
 import NewCounterForm from './components/NewCounterForm.vue';
+import SpellSlotsForm from './components/SpellSlotsForm.vue';
 import TableSidebar from './components/TableSidebar.vue';
 import {
   addWidget,
+  addWidgets,
   changeHp,
   restBoard,
   stepCounter,
@@ -58,6 +60,8 @@ function add() {
 }
 
 const addSpec = (spec: WidgetSpec) => apply(addWidget(board.value, spec));
+const addSlots = (specs: WidgetSpec[]) => apply(addWidgets(board.value, specs, 'spell slots'));
+const widgetNames = computed(() => board.value.widgets.map((w) => w.name));
 const rest = (kind: RestKind) => apply(restBoard(board.value, kind));
 
 // Private spells and the prepared list, shared by the sidebar and the spell view.
@@ -111,6 +115,10 @@ function open(name: string) {
         <section class="board-section">
           <h2>New counter</h2>
           <NewCounterForm @add="addSpec" />
+        </section>
+        <section class="board-section">
+          <h2>Spell slots</h2>
+          <SpellSlotsForm :existing-names="widgetNames" @add="addSlots" />
         </section>
         <section class="board-section">
           <h2>Advanced: paste a spec</h2>

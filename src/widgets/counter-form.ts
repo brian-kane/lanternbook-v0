@@ -13,7 +13,7 @@ export interface CounterForm {
 export type CounterField = 'name' | 'max' | 'reset' | 'value' | 'other';
 
 /** Digits only become a number; anything else typed becomes NaN, so the validator rejects it. */
-function whole(text: string): number | undefined {
+export function whole(text: string): number | undefined {
   const trimmed = text.trim();
   if (trimmed === '') return undefined;
   return /^\d+$/.test(trimmed) ? Number(trimmed) : NaN;
