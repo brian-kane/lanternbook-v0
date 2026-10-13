@@ -13,9 +13,35 @@ The spell view lists every spell in the SRD 5.1 and any spells you paste in your
 - Source: the official SRD 5.1 (CC) PDF, `https://media.dndbeyond.com/compendium-images/srd/5.1/SRD_CC_v5.1.pdf`, retrieved 2026-10-13, SHA-256 `2504d2a0abb0a4d491a939be4f17910a2dde0312570ab8d208080225ccf0a1f0`.
 - Spell text, level, school, ritual tag and the four header fields: the "Spell Descriptions" section, pages 114 to 193.
 - Classes and the name allow-list: the "Spell Lists" section, pages 105 to 113.
-- Extraction: the PDF's text layer was read with pdf.js and split on the headings and the labelled header lines. The extraction script was not committed, because it needs a PDF library the app does not use.
+- Extraction: [scripts/extract-srd-spells.mjs](../scripts/extract-srd-spells.mjs) reads the PDF's text layer with pdf.js and splits it on the headings and the labelled header lines. It refuses to write anything unless the two sections agree on every name and level.
 - Tables inside a spell (Confusion, Control Weather, Reincarnate, Teleport and a few others) are kept as plain lines, one table row per line.
 - Typos in the source are kept as printed. For example, the At Higher Levels line of Animal Friendship is garbled in the PDF itself.
+
+### Re-running the extraction
+
+The script runs by hand only: no CI job, hook or package script calls it. Its one library, pdf.js, is installed outside the repo, so it is not a dependency in package.json. Last run 2026-10-13 with Node v24.7.0 and pdfjs-dist 4.10.38.
+
+```sh
+# 1. pdf.js, pinned, in a folder outside the repo
+npm install --prefix /tmp/srd-tools pdfjs-dist@4.10.38
+
+# 2. the source PDF, checked against the hash above
+curl -sSL -o /tmp/SRD_CC_v5.1.pdf https://media.dndbeyond.com/compendium-images/srd/5.1/SRD_CC_v5.1.pdf
+sha256sum /tmp/SRD_CC_v5.1.pdf
+
+# 3. extract over the committed files, format them as the repo does, then compare
+node scripts/extract-srd-spells.mjs /tmp/SRD_CC_v5.1.pdf /tmp/srd-tools/node_modules/pdfjs-dist src/spells/data
+pnpm exec prettier --write src/spells/data
+sha256sum src/spells/data/*.json
+git diff --stat src/spells/data
+```
+
+The script prints each spell with the page its description starts on. After step 3, the hashes should be these and `git diff` should show no change:
+
+- `srd-spells.json`: `4e3d66a97b98a08328fe105c6def2b6f037b45c5f8426a3b456e904a0848ee5e`
+- `srd-spell-lists.json`: `2c268ff46dc76cfd098db3c9210a9051adfecf492d28dcdda24de7c594df18fe`
+
+### Checks
 
 [src/spells/content.test.ts](../src/spells/content.test.ts) checks the two sections against each other: every spell in the data must be on a class list, every listed spell must be in the data, and each spell's classes must match the lists. It also rejects any spell name with a possessive name in front (such as "Someone's Spell") unless the SRD lists that exact name, and any fixture spell that isn't marked as invented.
 
