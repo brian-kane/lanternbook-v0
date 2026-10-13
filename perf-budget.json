@@ -1,3 +1,4 @@
 {
-  "startupJsGzipKiB": 150
+  "startupJsGzipKiB": 150,
+  "notAtStartup": ["src/spells/data/srd-spells.json"]
 }
