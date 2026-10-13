@@ -54,5 +54,19 @@
     "duration": "Until dispelled",
     "text": "Invented for lanternbook tests. A ladder of moths reaches the nearest roof.",
     "classes": []
+  },
+  {
+    "version": 1,
+    "kind": "spell",
+    "name": "Ash Whistle",
+    "level": 1,
+    "school": "evocation",
+    "ritual": false,
+    "castingTime": "1 reaction",
+    "range": "10 feet",
+    "components": "V, S",
+    "duration": "1 round",
+    "text": "Invented for lanternbook tests. A whistle of warm ash sounds once.",
+    "classes": ["sorcerer"]
   }
 ]

@@ -1,0 +1,168 @@
+{
+  "classLists": {
+    "Artificer": ["lantern hum", "Moth Ladder", "Not A Spell"],
+    "sorcerer": ["Pebble Count"]
+  },
+  "cases": [
+    {
+      "name": "an empty query lists everything by level, then name",
+      "query": {
+        "search": "",
+        "level": null,
+        "school": null,
+        "className": null
+      },
+      "expected": ["Lantern Hum", "Ash Whistle", "Pebble Count", "Won't Stay Lit", "Moth Ladder"]
+    },
+    {
+      "name": "name search ignores case",
+      "query": {
+        "search": "LANTERN",
+        "level": null,
+        "school": null,
+        "className": null
+      },
+      "expected": ["Lantern Hum"]
+    },
+    {
+      "name": "name search ignores surrounding spaces",
+      "query": {
+        "search": "  count ",
+        "level": null,
+        "school": null,
+        "className": null
+      },
+      "expected": ["Pebble Count"]
+    },
+    {
+      "name": "a curly apostrophe finds a straight one",
+      "query": {
+        "search": "won’t",
+        "level": null,
+        "school": null,
+        "className": null
+      },
+      "expected": ["Won't Stay Lit"]
+    },
+    {
+      "name": "name search matches inside a name",
+      "query": {
+        "search": "ad",
+        "level": null,
+        "school": null,
+        "className": null
+      },
+      "expected": ["Moth Ladder"]
+    },
+    {
+      "name": "level 0 is cantrips",
+      "query": {
+        "search": "",
+        "level": 0,
+        "school": null,
+        "className": null
+      },
+      "expected": ["Lantern Hum"]
+    },
+    {
+      "name": "level 1",
+      "query": {
+        "search": "",
+        "level": 1,
+        "school": null,
+        "className": null
+      },
+      "expected": ["Ash Whistle", "Pebble Count"]
+    },
+    {
+      "name": "level 9",
+      "query": {
+        "search": "",
+        "level": 9,
+        "school": null,
+        "className": null
+      },
+      "expected": ["Moth Ladder"]
+    },
+    {
+      "name": "school",
+      "query": {
+        "search": "",
+        "level": null,
+        "school": "divination",
+        "className": null
+      },
+      "expected": ["Pebble Count"]
+    },
+    {
+      "name": "SRD class from the spell's classes",
+      "query": {
+        "search": "",
+        "level": null,
+        "school": null,
+        "className": "druid"
+      },
+      "expected": ["Pebble Count", "Won't Stay Lit"]
+    },
+    {
+      "name": "class ignores case",
+      "query": {
+        "search": "",
+        "level": null,
+        "school": null,
+        "className": "Wizard"
+      },
+      "expected": ["Lantern Hum", "Won't Stay Lit"]
+    },
+    {
+      "name": "private class list, matched by name ignoring case and unknown names",
+      "query": {
+        "search": "",
+        "level": null,
+        "school": null,
+        "className": "artificer"
+      },
+      "expected": ["Lantern Hum", "Moth Ladder"]
+    },
+    {
+      "name": "private class list adds to the spell's own classes",
+      "query": {
+        "search": "",
+        "level": null,
+        "school": null,
+        "className": "sorcerer"
+      },
+      "expected": ["Ash Whistle", "Pebble Count"]
+    },
+    {
+      "name": "class with no spells",
+      "query": {
+        "search": "",
+        "level": null,
+        "school": null,
+        "className": "ranger"
+      },
+      "expected": []
+    },
+    {
+      "name": "all filters together",
+      "query": {
+        "search": "i",
+        "level": 3,
+        "school": "transmutation",
+        "className": "cleric"
+      },
+      "expected": ["Won't Stay Lit"]
+    },
+    {
+      "name": "filters that exclude each other",
+      "query": {
+        "search": "",
+        "level": 0,
+        "school": "evocation",
+        "className": null
+      },
+      "expected": []
+    }
+  ]
+}
