@@ -2,6 +2,7 @@ import { flushPromises, mount, type VueWrapper } from '@vue/test-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import inventedText from '../spells/fixtures/invented-spells.json?raw';
 import { SPELLS_BACKUP_KEY, SPELLS_KEY } from '../spells/store';
+import noticeText from '../../NOTICE?raw';
 import SpellView from './SpellView.vue';
 
 // Tests use invented spells only: the bundled SRD data is swapped for the fixture spells.
@@ -155,5 +156,19 @@ describe('SpellView', () => {
     );
     expect(localStorage.getItem(SPELLS_BACKUP_KEY)).toBe('{"spells": [');
     expect(names(wrapper)).toHaveLength(5);
+  });
+
+  it('shows the SRD 5.1 attribution statement in its footer, as the SRD asks', async () => {
+    const wrapper = await open();
+    expect(wrapper.get('footer.attribution').text()).toBe(
+      'This work includes material taken from the System Reference Document 5.1 (“SRD 5.1”) by Wizards of the Coast LLC and available at https://dnd.wizards.com/resources/systems-reference-document. The SRD 5.1 is licensed under the Creative Commons Attribution 4.0 International License available at https://creativecommons.org/licenses/by/4.0/legalcode.',
+    );
+  });
+
+  it('uses the same attribution statement as NOTICE, apart from the quote marks', async () => {
+    const wrapper = await open();
+    const statement = noticeText.split('\n\n')[0]!.replace(/\s+/g, ' ').trim();
+    const shown = wrapper.get('footer.attribution').text().replace(/[“”]/g, '"');
+    expect(shown).toBe(statement);
   });
 });

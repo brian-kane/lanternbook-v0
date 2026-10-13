@@ -37,6 +37,11 @@ const level = ref('');
 const school = ref<School | ''>('');
 const className = ref('');
 
+// Verbatim from the "Legal Information" page (page 1) of the SRD 5.1 (CC) PDF, which asks for
+// exactly this statement and no other attribution regarding Wizards. Also in NOTICE.
+const SRD_ATTRIBUTION =
+  'This work includes material taken from the System Reference Document 5.1 (“SRD 5.1”) by Wizards of the Coast LLC and available at https://dnd.wizards.com/resources/systems-reference-document. The SRD 5.1 is licensed under the Creative Commons Attribution 4.0 International License available at https://creativecommons.org/licenses/by/4.0/legalcode.';
+
 const LEVELS = ['Cantrip', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th'];
 const capitalise = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
@@ -208,6 +213,10 @@ function removeClassList(name: string) {
         </li>
       </ul>
     </details>
+
+    <footer class="attribution">
+      <p>{{ SRD_ATTRIBUTION }}</p>
+    </footer>
   </div>
 </template>
 
@@ -266,6 +275,16 @@ function removeClassList(name: string) {
 .hint {
   margin: 0.5rem 0 0;
   opacity: 0.75;
+}
+.attribution {
+  border-top: 1px solid var(--line);
+  padding: 0.75rem 0 1rem;
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+.attribution p {
+  margin: 0;
+  overflow-wrap: anywhere;
 }
 @media (max-width: 40rem) {
   .filters {
