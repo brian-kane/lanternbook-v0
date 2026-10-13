@@ -54,7 +54,7 @@ describe('App', () => {
     expect((wrapper.get('textarea').element as HTMLTextAreaElement).value).toBe(bad);
   });
 
-  it('undoes a counter step, a tick, a rest and an add, one tap each', async () => {
+  it('undoes the last add or rest in one tap, including the steps and ticks since', async () => {
     const wrapper = mount(App);
     await add(wrapper, counterText);
     await add(wrapper, checklistText);
@@ -64,23 +64,32 @@ describe('App', () => {
 
     await button(wrapper, 'Decrease Lantern oil flasks').trigger('click');
     await button(wrapper, 'Decrease Lantern oil flasks').trigger('click');
-    expect(value()).toBe('1 / 3');
     await wrapper.findAll('input[type="checkbox"]')[0]!.setValue(true);
-    expect(ticked()).toStrictEqual([true, false, true]);
+    expect(value()).toBe('1 / 3');
     await button(wrapper, 'Long rest').trigger('click');
     expect(value()).toBe('3 / 3');
 
     await button(wrapper, 'Undo').trigger('click');
     expect(value()).toBe('1 / 3');
-    await button(wrapper, 'Undo').trigger('click');
-    expect(ticked()).toStrictEqual([false, false, true]);
-    await button(wrapper, 'Undo').trigger('click');
-    expect(value()).toBe('2 / 3');
-    await button(wrapper, 'Undo').trigger('click');
+    expect(ticked()).toStrictEqual([true, false, true]);
+
     await button(wrapper, 'Undo').trigger('click');
     expect(wrapper.findAll('.widget')).toHaveLength(1);
+    expect(value()).toBe('3 / 3');
+
     await button(wrapper, 'Undo').trigger('click');
     expect(wrapper.findAll('.widget')).toHaveLength(0);
+    expect(button(wrapper, 'Undo').attributes('disabled')).toBeDefined();
+  });
+
+  it('does not offer Undo for steps and ticks alone', async () => {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ version: 1, widgets: [{ ...JSON.parse(counterText), id: 1 }], history: [] }),
+    );
+    const wrapper = mount(App);
+    await button(wrapper, 'Decrease Lantern oil flasks').trigger('click');
+    expect(wrapper.get('.counter-value').text()).toBe('2 / 3');
     expect(button(wrapper, 'Undo').attributes('disabled')).toBeDefined();
   });
 
@@ -109,7 +118,7 @@ describe('App', () => {
     const second = mount(App);
     expect(second.get('.counter-value').text()).toBe('2 / 3');
     await button(second, 'Undo').trigger('click');
-    expect(second.get('.counter-value').text()).toBe('3 / 3');
+    expect(second.findAll('.widget')).toHaveLength(0);
   });
 
   it('starts with a notice instead of crashing when saved data is corrupt', () => {

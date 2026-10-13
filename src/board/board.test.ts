@@ -65,27 +65,45 @@ describe('board changes', () => {
 });
 
 describe('undo', () => {
-  const changes: [string, (b: Board) => Board][] = [
+  const snapshotting: [string, (b: Board) => Board][] = [
     ['add a widget', (b) => addWidget(b, checklist)],
+    ['short rest', (b) => restBoard(b, 'short')],
+    ['long rest', (b) => restBoard(b, 'long')],
+  ];
+  const adjustments: [string, (b: Board) => Board][] = [
     ['counter +', (b) => stepCounter(b, 1, 1)],
     ['counter -', (b) => stepCounter(b, 1, -1)],
     ['checklist tick', (b) => toggleItem(b, 2, 1)],
     ['checklist untick', (b) => toggleItem(b, 2, 2)],
-    ['short rest', (b) => restBoard(b, 'short')],
-    ['long rest', (b) => restBoard(b, 'long')],
   ];
 
-  it.each(changes)('restores the exact state before: %s', (_, change) => {
+  it.each(snapshotting)('restores the exact state before: %s', (_, change) => {
     const before = seeded();
     const snapshot = structuredClone(before);
     const after = change(before);
     expect(after.widgets).not.toStrictEqual(before.widgets);
+    expect(after.history).toHaveLength(before.history.length + 1);
     expect(undo(after)).toStrictEqual(snapshot);
   });
 
-  it('undoes changes one at a time, newest first', () => {
+  it.each(adjustments)('takes no snapshot for: %s', (_, change) => {
+    const before = seeded();
+    const after = change(before);
+    expect(after.widgets).not.toStrictEqual(before.widgets);
+    expect(after.history).toBe(before.history);
+  });
+
+  it.each(adjustments)('undo after %s returns to before the last add or rest', (_, change) => {
+    const beforeRest = seeded();
+    const snapshot = structuredClone(beforeRest);
+    const rested = restBoard(beforeRest, 'short');
+    const adjusted = change(change(rested));
+    expect(undo(adjusted)).toStrictEqual(snapshot);
+  });
+
+  it('undoes adds and rests one at a time, newest first', () => {
     const states = [seeded()];
-    for (const [, change] of changes) states.push(change(states.at(-1)!));
+    for (const [, change] of snapshotting) states.push(change(states.at(-1)!));
     let board = states.at(-1)!;
     for (let i = states.length - 2; i >= 0; i--) {
       expect(board).not.toStrictEqual(states[i]);
@@ -94,11 +112,17 @@ describe('undo', () => {
     }
   });
 
-  it('records nothing when a change has no effect', () => {
+  it('snapshots every rest, even one that refills nothing', () => {
+    const rested = restBoard(seeded(), 'long');
+    const again = restBoard(rested, 'long');
+    expect(again.widgets).toStrictEqual(rested.widgets);
+    expect(again.history).toHaveLength(rested.history.length + 1);
+    expect(undo(again)).toStrictEqual(rested);
+  });
+
+  it('ignores steps and ticks that change nothing', () => {
     const full = stepCounter(stepCounter(seeded(), 1, 1), 1, 1);
     expect(stepCounter(full, 1, 1)).toBe(full);
-    const rested = restBoard(full, 'long');
-    expect(restBoard(rested, 'long')).toBe(rested);
     expect(stepCounter(full, 99, 1)).toBe(full);
     expect(toggleItem(full, 2, 99)).toBe(full);
   });
