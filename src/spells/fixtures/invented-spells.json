@@ -53,7 +53,21 @@
     "components": "V, S",
     "duration": "Until dispelled",
     "text": "Invented for lanternbook tests. A ladder of moths reaches the nearest roof.",
-    "classes": []
+    "classes": [],
+    "tables": [
+      {
+        "caption": "Moth count",
+        "header": ["d4", "Moths", "Note"],
+        "rows": [
+          ["1-2", "A few", "<b>not bold</b>"],
+          ["3-4", "Very many", "They hum."]
+        ]
+      },
+      {
+        "header": ["Roof", "Height"],
+        "rows": [["Flat", "10 feet"]]
+      }
+    ]
   },
   {
     "version": 1,

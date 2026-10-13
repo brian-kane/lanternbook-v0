@@ -233,4 +233,30 @@ describe('SpellView', () => {
       </article>"
     `);
   });
+
+  it('renders the tables of a spell as real tables after its text, every cell as text', async () => {
+    const wrapper = await open();
+    const card = wrapper.findAll('.spell-card').find((c) => c.get('h2').text() === 'Moth Ladder')!;
+    const tables = card.findAll('.table-scroll > table');
+    expect(tables).toHaveLength(2);
+    const [first, second] = tables;
+    expect(first!.get('caption').text()).toBe('Moth count');
+    expect(first!.findAll('thead th').map((th) => th.text())).toStrictEqual([
+      'd4',
+      'Moths',
+      'Note',
+    ]);
+    expect(
+      first!.findAll('tbody tr').map((tr) => tr.findAll('td').map((td) => td.text())),
+    ).toStrictEqual([
+      ['1-2', 'A few', '<b>not bold</b>'],
+      ['3-4', 'Very many', 'They hum.'],
+    ]);
+    expect(first!.find('b').exists()).toBe(false);
+    expect(second!.find('caption').exists()).toBe(false);
+    expect(second!.findAll('tbody td').map((td) => td.text())).toStrictEqual(['Flat', '10 feet']);
+    expect(card.get('.spell-text').text()).not.toContain('Very many');
+    const order = card.findAll('.spell-text, .table-scroll').map((el) => el.classes()[0]);
+    expect(order).toStrictEqual(['spell-text', 'table-scroll', 'table-scroll']);
+  });
 });

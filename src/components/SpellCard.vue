@@ -1,5 +1,6 @@
 <script setup lang="ts">
-// One spell as a card. Every field renders as text; line breaks in the text are kept by CSS.
+// One spell as a card. Every field renders as text; line breaks in the text are kept by CSS, and
+// tables follow the text, scrolling sideways inside the card when they are wider than it.
 import { computed } from 'vue';
 import type { SpellSpec } from '../widgets/spell-spec';
 
@@ -39,6 +40,27 @@ const classes = computed(() => props.spell.classes.map(capitalise).join(', '));
       </template>
     </dl>
     <p class="spell-text">{{ spell.text }}</p>
+    <template v-if="spell.tables">
+      <div v-for="(table, t) in spell.tables" :key="t" class="table-scroll">
+        <table>
+          <caption v-if="table.caption">
+            {{
+              table.caption
+            }}
+          </caption>
+          <thead>
+            <tr>
+              <th v-for="(cell, c) in table.header" :key="c" scope="col">{{ cell }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(row, r) in table.rows" :key="r">
+              <td v-for="(cell, c) in row" :key="c">{{ cell }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </template>
     <button
       v-if="props.private"
       type="button"
@@ -97,6 +119,27 @@ dd {
   margin: 0;
   white-space: pre-line;
   overflow-wrap: anywhere;
+}
+.table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  margin-top: 0.75rem;
+}
+table {
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+caption {
+  text-align: left;
+  font-weight: 600;
+  padding-bottom: 0.25rem;
+}
+th,
+td {
+  border: 1px solid var(--line);
+  padding: 0.25rem 0.5rem;
+  text-align: left;
+  vertical-align: top;
 }
 .remove {
   margin-top: 0.75rem;
