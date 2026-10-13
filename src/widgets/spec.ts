@@ -1,5 +1,14 @@
 // Widget specs: the JSON a person pastes to add a widget. Hand-written validation, so every
 // rejection reads as a sentence and no runtime dependency is needed. Examples: docs/EXAMPLES.md.
+import {
+  checkFields,
+  checkText,
+  checkVersion,
+  isObject,
+  isWholeIn,
+  parsePasted,
+  type Json,
+} from './helpers';
 
 export const SPEC_VERSION = 1;
 
@@ -42,26 +51,12 @@ export type Widget = WidgetSpec & { id: number };
 export type SpecResult = { ok: true; spec: WidgetSpec } | { ok: false; errors: string[] };
 export type WidgetResult = { ok: true; widget: Widget } | { ok: false; errors: string[] };
 
-type Json = Record<string, unknown>;
-
 const FIELDS = {
   counter: ['version', 'kind', 'name', 'value', 'max', 'reset'],
   checklist: ['version', 'kind', 'name', 'items'],
 } as const;
 
 const RESETS: readonly unknown[] = ['short', 'long', 'none'];
-
-const isObject = (value: unknown): value is Json =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
-
-const isWholeIn = (value: unknown, min: number, max: number): value is number =>
-  Number.isInteger(value) && (value as number) >= min && (value as number) <= max;
-
-function checkText(value: unknown, label: string, cap: number, errors: string[]) {
-  if (typeof value !== 'string') errors.push(`${label} must be text.`);
-  else if (value.trim() === '') errors.push(`${label} must not be empty.`);
-  else if (value.length > cap) errors.push(`${label} is longer than ${cap} characters.`);
-}
 
 function checkItems(items: unknown, errors: string[]) {
   if (!Array.isArray(items)) {
@@ -89,13 +84,7 @@ function check(value: unknown, extraFields: readonly string[]): string[] {
   if (!isObject(value)) return ['A widget spec must be a JSON object, like the examples.'];
   const errors: string[] = [];
 
-  if (!('version' in value))
-    errors.push(`version is missing; this app reads version ${SPEC_VERSION}.`);
-  else if (value.version !== SPEC_VERSION) {
-    errors.push(
-      `version ${JSON.stringify(value.version)} is not supported; this app reads version ${SPEC_VERSION}.`,
-    );
-  }
+  checkVersion(value, SPEC_VERSION, errors);
 
   const kind = value.kind;
   if (kind !== 'counter' && kind !== 'checklist') {
@@ -120,10 +109,7 @@ function check(value: unknown, extraFields: readonly string[]): string[] {
     checkItems(value.items, errors);
   }
 
-  const allowed: readonly string[] = [...FIELDS[kind], ...extraFields];
-  for (const key of Object.keys(value)) {
-    if (!allowed.includes(key)) errors.push(`unknown field "${key}".`);
-  }
+  checkFields(value, [...FIELDS[kind], ...extraFields], errors);
   return errors;
 }
 
@@ -154,18 +140,9 @@ export function validateWidget(value: unknown): WidgetResult {
 
 /** Parses pasted text into a spec, turning every failure into a message for the person. */
 export function parseSpecText(text: string): SpecResult {
-  if (text.trim() === '') return { ok: false, errors: ['Paste a widget spec first.'] };
-  if (text.length > LIMITS.specText) {
-    return { ok: false, errors: [`That spec is too long (over ${LIMITS.specText} characters).`] };
-  }
-  let value: unknown;
-  try {
-    value = JSON.parse(text);
-  } catch {
-    return {
-      ok: false,
-      errors: ['That is not valid JSON. Check for missing quotes, commas or brackets.'],
-    };
-  }
-  return validateSpec(value);
+  const parsed = parsePasted(text, LIMITS.specText, {
+    empty: 'Paste a widget spec first.',
+    tooLong: `That spec is too long (over ${LIMITS.specText} characters).`,
+  });
+  return parsed.ok ? validateSpec(parsed.value) : parsed;
 }
