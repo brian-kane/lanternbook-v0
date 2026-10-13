@@ -75,11 +75,13 @@ describe('App', () => {
     await add(wrapper, checklistText);
     const value = () => wrapper.get('.counter-value').text();
     const ticked = () =>
-      wrapper.findAll<HTMLInputElement>('input[type="checkbox"]').map((c) => c.element.checked);
+      wrapper
+        .findAll<HTMLInputElement>('.widget input[type="checkbox"]')
+        .map((c) => c.element.checked);
 
     await button(wrapper, 'Decrease Lantern oil flasks').trigger('click');
     await button(wrapper, 'Decrease Lantern oil flasks').trigger('click');
-    await wrapper.findAll('input[type="checkbox"]')[0]!.setValue(true);
+    await wrapper.findAll('.widget input[type="checkbox"]')[0]!.setValue(true);
     expect(value()).toBe('1 / 3');
     await button(wrapper, 'Long rest').trigger('click');
     expect(value()).toBe('3 / 3');
@@ -397,5 +399,79 @@ describe('sidebar', () => {
         .value,
     ).toBe('Moth Ladder');
     expect(undoButton(wrapper).text()).toBe(undoBefore);
+  });
+});
+
+describe('New counter form', () => {
+  async function fill(
+    wrapper: VueWrapper,
+    fields: { name?: string; max?: string; reset?: string; start?: string; hp?: boolean },
+  ) {
+    const form = wrapper.get('form.new-counter');
+    if (fields.name !== undefined) await form.get('input[name="name"]').setValue(fields.name);
+    if (fields.max !== undefined) await form.get('input[name="max"]').setValue(fields.max);
+    if (fields.reset !== undefined) await form.get('select[name="reset"]').setValue(fields.reset);
+    if (fields.start !== undefined) await form.get('input[name="start"]').setValue(fields.start);
+    if (fields.hp !== undefined) await form.get('input[name="hp"]').setValue(fields.hp);
+    await form.trigger('submit');
+  }
+  const widgets = (wrapper: VueWrapper) => wrapper.get('aside.sidebar').findAll('.widget');
+
+  it('adds a counter with an undo snapshot, as pasting does, and clears the form', async () => {
+    const wrapper = mount(App);
+    await fill(wrapper, { name: 'Wild Shape uses', max: '2', reset: 'short' });
+    expect(widgets(wrapper).map((w) => w.get('h2').text())).toStrictEqual(['Wild Shape uses']);
+    expect(widgets(wrapper)[0]!.get('.counter-value').text()).toBe('2 / 2');
+    expect(undoButton(wrapper).text()).toBe('Undo add: Wild Shape uses');
+    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY)!).widgets;
+    expect(stored).toStrictEqual([
+      {
+        version: 1,
+        kind: 'counter',
+        name: 'Wild Shape uses',
+        value: 2,
+        max: 2,
+        reset: 'short',
+        id: 1,
+      },
+    ]);
+    expect((wrapper.get('input[name="name"]').element as HTMLInputElement).value).toBe('');
+  });
+
+  it('makes a hit points counter when HP is ticked', async () => {
+    const wrapper = mount(App);
+    await fill(wrapper, { name: 'Hit points', max: '27', reset: 'long', start: '27', hp: true });
+    expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!).widgets).toStrictEqual([
+      { ...JSON.parse(hpText), id: 1 },
+    ]);
+    expect(wrapper.find('input[aria-label="Amount for Hit points"]').exists()).toBe(true);
+  });
+
+  it('shows plain messages next to the fields and adds nothing when the form is wrong', async () => {
+    const wrapper = mount(App);
+    await fill(wrapper, { name: ' ', max: 'lots', reset: 'long', start: '3' });
+    const form = wrapper.get('form.new-counter');
+    expect(form.get('#new-counter-name-error').text()).toBe('Name must not be empty.');
+    expect(form.get('#new-counter-max-error').text()).toBe(
+      'Max must be a whole number from 1 to 999.',
+    );
+    expect(form.get('input[name="max"]').attributes('aria-describedby')).toBe(
+      'new-counter-max-error',
+    );
+    expect(widgets(wrapper)).toHaveLength(0);
+    expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
+    await fill(wrapper, { name: 'Ki', max: '3', start: '9' });
+    expect(form.get('#new-counter-value-error').text()).toBe(
+      'Starting value must be a whole number from 0 to max (3).',
+    );
+    expect(widgets(wrapper)).toHaveLength(0);
+  });
+
+  it('keeps the paste box under an Advanced heading', () => {
+    const wrapper = mount(App);
+    const headings = wrapper.findAll('main h2').map((h) => h.text());
+    expect(headings).toContain('New counter');
+    expect(headings).toContain('Advanced: paste a spec');
+    expect(wrapper.find('textarea[aria-label="Widget spec"]').exists()).toBe(true);
   });
 });

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { defineAsyncComponent, provide, ref, shallowRef } from 'vue';
+import NewCounterForm from './components/NewCounterForm.vue';
 import TableSidebar from './components/TableSidebar.vue';
 import {
   addWidget,
@@ -13,7 +14,7 @@ import {
 import { browserStore } from './board/storage';
 import type { RestKind } from './rules/rest';
 import { PRIVATE_SPELLS, createPrivateSpellsState } from './spells/private-state';
-import { parseSpecText } from './widgets/spec';
+import { parseSpecText, type WidgetSpec } from './widgets/spec';
 
 // Loaded only when the Spells tab opens, so the spell view and the SRD data stay out of startup.
 const SpellView = defineAsyncComponent(() => import('./components/SpellView.vue'));
@@ -56,6 +57,7 @@ function add() {
   apply(addWidget(board.value, result.spec));
 }
 
+const addSpec = (spec: WidgetSpec) => apply(addWidget(board.value, spec));
 const rest = (kind: RestKind) => apply(restBoard(board.value, kind));
 
 // Private spells and the prepared list, shared by the sidebar and the spell view.
@@ -105,22 +107,31 @@ function open(name: string) {
       </p>
 
       <SpellView v-if="tab === 'spells'" :open="openSpell" @close="openSpell = null" />
-      <div v-else class="add-form">
-        <label for="spec">Paste a widget spec (see docs/EXAMPLES.md)</label>
-        <textarea
-          id="spec"
-          v-model="specText"
-          aria-label="Widget spec"
-          rows="6"
-          spellcheck="false"
-          autocapitalize="off"
-          autocomplete="off"
-        ></textarea>
-        <button type="button" class="add" @click="add">Add widget</button>
-        <ul v-if="errors.length" class="errors" role="alert">
-          <li v-for="(error, i) in errors" :key="i">{{ error }}</li>
-        </ul>
-      </div>
+      <template v-else>
+        <section class="board-section">
+          <h2>New counter</h2>
+          <NewCounterForm @add="addSpec" />
+        </section>
+        <section class="board-section">
+          <h2>Advanced: paste a spec</h2>
+          <div class="add-form">
+            <label for="spec">Paste a widget spec (see docs/EXAMPLES.md)</label>
+            <textarea
+              id="spec"
+              v-model="specText"
+              aria-label="Widget spec"
+              rows="6"
+              spellcheck="false"
+              autocapitalize="off"
+              autocomplete="off"
+            ></textarea>
+            <button type="button" class="add" @click="add">Add widget</button>
+            <ul v-if="errors.length" class="errors" role="alert">
+              <li v-for="(error, i) in errors" :key="i">{{ error }}</li>
+            </ul>
+          </div>
+        </section>
+      </template>
     </main>
   </div>
 </template>
@@ -203,6 +214,13 @@ h1 {
   padding: 0.75rem;
   border: 1px solid var(--line);
   border-radius: 0.5rem;
+}
+.board-section {
+  max-width: 36rem;
+}
+.board-section h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
 }
 .add-form {
   display: grid;

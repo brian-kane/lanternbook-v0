@@ -1,6 +1,6 @@
 # Example widget specs
 
-Paste one of these into the box on the **Board** tab and press **Add widget**. Widgets appear in the sidebar on the left, which stays on screen on both tabs. All three are also the starting fixtures for the tests (`src/widgets/fixtures/`), and a test fails if this page and the fixtures drift apart.
+For a counter, the **New counter** form on the **Board** tab is easiest: name, max, what refills it, an optional starting value and a **Hit points** box. It builds the same spec shown below and checks it the same way. For anything else, paste one of these under **Advanced: paste a spec** and press **Add widget**. Widgets appear in the sidebar on the left, which stays on screen on both tabs. All three are also the starting fixtures for the tests (`src/widgets/fixtures/`), and a test fails if this page and the fixtures drift apart.
 
 ## Counter
 
