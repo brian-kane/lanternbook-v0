@@ -46,43 +46,75 @@ describe('browserStore', () => {
     const result = browserStore(() => storage).load();
     expect(result.board).toStrictEqual(emptyBoard());
     expect(result.notice).toBe(
-      "Saved widgets couldn't be read, so lanternbook started empty. The old data is kept as a backup in this browser.",
+      "Saved widgets couldn't be read, so lanternbook started empty. The original data is kept as a backup in this browser.",
     );
     expect(storage.data.get(BACKUP_KEY)).toBe(raw);
   });
 
-  it('keeps the readable widgets when one stored widget is bad', () => {
-    const stored = {
-      version: 1,
-      widgets: [
-        { ...counter, id: 1 },
-        { ...checklist, id: 2, items: null },
-      ],
-      history: [],
-    };
-    const result = browserStore(() => memory({ [STORAGE_KEY]: JSON.stringify(stored) })).load();
-    expect(result.board.widgets).toStrictEqual([{ ...counter, id: 1 }]);
-    expect(result.notice).toBe("1 saved widget couldn't be read and was left out.");
+  const BACKED_UP = 'The original data is kept as a backup in this browser.';
+  const good = { ...counter, id: 1 };
+  const bad = { ...checklist, id: 2, items: null };
+
+  function loadRaw(stored: unknown) {
+    const raw = JSON.stringify(stored);
+    const storage = memory({ [STORAGE_KEY]: raw });
+    return { raw, storage, result: browserStore(() => storage).load() };
+  }
+
+  it('writes no backup for clean data', () => {
+    const { storage } = loadRaw({ version: 1, widgets: [good], history: [[]] });
+    expect(storage.data.has(BACKUP_KEY)).toBe(false);
   });
 
-  it('drops a widget whose id repeats', () => {
-    const stored = {
-      version: 1,
-      widgets: [
-        { ...counter, id: 1 },
-        { ...checklist, id: 1 },
-      ],
-      history: [],
-    };
-    const result = browserStore(() => memory({ [STORAGE_KEY]: JSON.stringify(stored) })).load();
-    expect(result.board.widgets).toStrictEqual([{ ...counter, id: 1 }]);
+  it('drops a bad widget, keeps the valid widgets and the valid history, and backs up first', () => {
+    const history = [[], [good]];
+    const { raw, storage, result } = loadRaw({ version: 1, widgets: [good, bad], history });
+    expect(result.board).toStrictEqual({ widgets: [good], history });
+    expect(result.notice).toBe(`1 saved widget couldn't be read and was left out. ${BACKED_UP}`);
+    expect(storage.data.get(BACKUP_KEY)).toBe(raw);
+    expect(storage.data.get(STORAGE_KEY)).toBe(raw);
   });
 
-  it('clears an unreadable undo history but keeps the widgets', () => {
-    const stored = { version: 1, widgets: [{ ...counter, id: 1 }], history: [[{ kind: 'timer' }]] };
-    const result = browserStore(() => memory({ [STORAGE_KEY]: JSON.stringify(stored) })).load();
-    expect(result.board).toStrictEqual({ widgets: [{ ...counter, id: 1 }], history: [] });
-    expect(result.notice).toBe("Saved undo history couldn't be read, so Undo starts fresh.");
+  it('counts every dropped widget, repeated ids included', () => {
+    const { result } = loadRaw({
+      version: 1,
+      widgets: [good, bad, { ...checklist, id: 1 }],
+      history: [],
+    });
+    expect(result.board.widgets).toStrictEqual([good]);
+    expect(result.notice).toBe(`2 saved widgets couldn't be read and were left out. ${BACKED_UP}`);
+  });
+
+  it('clears an unreadable history, keeps the widgets, and backs up first', () => {
+    const { raw, storage, result } = loadRaw({
+      version: 1,
+      widgets: [good],
+      history: [[good], [{ kind: 'timer' }]],
+    });
+    expect(result.board).toStrictEqual({ widgets: [good], history: [] });
+    expect(result.notice).toBe(
+      `Saved undo history couldn't be read, so Undo starts fresh. ${BACKED_UP}`,
+    );
+    expect(storage.data.get(BACKUP_KEY)).toBe(raw);
+  });
+
+  it('reports both problems when a widget and the history are bad', () => {
+    const { result } = loadRaw({ version: 1, widgets: [good, bad], history: [[bad]] });
+    expect(result.board).toStrictEqual({ widgets: [good], history: [] });
+    expect(result.notice).toBe(
+      `1 saved widget couldn't be read and was left out. Saved undo history couldn't be read, so Undo starts fresh. ${BACKED_UP}`,
+    );
+  });
+
+  it('says so when the backup itself cannot be written', () => {
+    const raw = JSON.stringify({ version: 1, widgets: [good, bad], history: [] });
+    const storage = memory({ [STORAGE_KEY]: raw });
+    storage.setItem = () => {
+      throw new Error('QuotaExceededError');
+    };
+    expect(browserStore(() => storage).load().notice).toBe(
+      "1 saved widget couldn't be read and was left out. The original data couldn't be backed up.",
+    );
   });
 
   it('starts empty with a notice when browser storage is blocked', () => {
