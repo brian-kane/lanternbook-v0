@@ -21,7 +21,7 @@ What I use in a session. I edit this list; nothing is added to it without my say
 - Short and long rest: built (rehearsed once).
 - Spell text lookup: built (rehearsed once).
 - Prepared spell list: built (rehearsed once).
-- Wild Shape current form and its HP. This is next, and gets planned with me before anything is built: it needs a second SRD extraction (beast stat blocks) and an agreed HP rule.
+- Wild Shape current form and its HP.
 - Companion stat block.
 - Homebrew items.
 - Conditions as display-only modifiers.
