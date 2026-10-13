@@ -38,6 +38,16 @@ A checklist is a list of items to tick off. Rests leave it alone.
 
 A counter with `"hp": true` is your hit points. It sits in the sidebar with a box for an amount and **Damage** and **Heal** buttons: damage stops at 0 and healing stops at `max`. With `"reset": "long"`, a long rest refills it.
 
+Hit points counters also show **Temp HP** with its own amount box and a **Gain temp HP** button. The rules (one home: `src/rules/hp.ts`, with golden cases):
+
+- Damage comes off temp HP first; whatever is left reduces current HP, which stops at 0.
+- Healing raises current HP up to `max` and never restores temp HP.
+- Temp HP does not stack: gaining keeps the higher of the old and the new amount, and a message says which was kept.
+- A long rest clears temp HP; a short rest does not. Temp HP never changes `max`.
+- Amounts are whole numbers from 0 to 999.
+
+A saved hit points counter may carry `"temp"` (a whole number from 0 to 999); without it, temp HP is 0. `"temp"` is only allowed together with `"hp": true`.
+
 ```json
 {
   "version": 1,
@@ -54,7 +64,7 @@ Spell slots and other resources are plain counters, one per slot level, such as 
 
 ## Undo
 
-**Undo** goes back to the state just before the last **Add**, **Short rest**/**Long rest**, **Damage** or **Heal**, including any +/− and ticks made since. Taps on +/− and ticks are not undone one at a time, and a rest, damage or heal that changes nothing is not recorded. The button names what it will undo, such as **Undo add: Lantern oil flasks**, **Undo long rest** or **Undo damage 7: Hit points**. The app keeps the last 20 of these.
+**Undo** goes back to the state just before the last **Add**, **Short rest**/**Long rest**, **Damage**, **Heal** or **Gain temp HP**, including any +/− and ticks made since. Taps on +/− and ticks are not undone one at a time, and a rest, damage, heal or temp HP gain that changes nothing is not recorded (damage that only uses up temp HP is recorded). The button names what it will undo, such as **Undo add: Lantern oil flasks**, **Undo long rest** or **Undo damage 7: Hit points**. The app keeps the last 20 of these.
 
 ## Limits
 

@@ -1,0 +1,344 @@
+{
+  "cases": [
+    {
+      "description": "damage fully absorbed by temp HP",
+      "before": {
+        "value": 20,
+        "max": 27,
+        "temp": 8
+      },
+      "op": "damage",
+      "amount": 5,
+      "after": {
+        "value": 20,
+        "max": 27,
+        "temp": 3
+      }
+    },
+    {
+      "description": "damage equal to temp HP uses it all and leaves current HP",
+      "before": {
+        "value": 20,
+        "max": 27,
+        "temp": 5
+      },
+      "op": "damage",
+      "amount": 5,
+      "after": {
+        "value": 20,
+        "max": 27,
+        "temp": 0
+      }
+    },
+    {
+      "description": "damage exceeding temp HP takes the rest from current HP",
+      "before": {
+        "value": 20,
+        "max": 27,
+        "temp": 5
+      },
+      "op": "damage",
+      "amount": 12,
+      "after": {
+        "value": 13,
+        "max": 27,
+        "temp": 0
+      }
+    },
+    {
+      "description": "damage exceeding temp and current HP stops current at 0",
+      "before": {
+        "value": 4,
+        "max": 27,
+        "temp": 3
+      },
+      "op": "damage",
+      "amount": 20,
+      "after": {
+        "value": 0,
+        "max": 27,
+        "temp": 0
+      }
+    },
+    {
+      "description": "damage at 0 current HP with temp HP present comes off temp HP",
+      "before": {
+        "value": 0,
+        "max": 27,
+        "temp": 6
+      },
+      "op": "damage",
+      "amount": 4,
+      "after": {
+        "value": 0,
+        "max": 27,
+        "temp": 2
+      }
+    },
+    {
+      "description": "damage at 0 current HP beyond temp HP leaves both at 0",
+      "before": {
+        "value": 0,
+        "max": 27,
+        "temp": 2
+      },
+      "op": "damage",
+      "amount": 5,
+      "after": {
+        "value": 0,
+        "max": 27,
+        "temp": 0
+      }
+    },
+    {
+      "description": "damage of 0 changes nothing",
+      "before": {
+        "value": 20,
+        "max": 27,
+        "temp": 5
+      },
+      "op": "damage",
+      "amount": 0,
+      "after": {
+        "value": 20,
+        "max": 27,
+        "temp": 5
+      }
+    },
+    {
+      "description": "healing while temp HP is present raises current HP only",
+      "before": {
+        "value": 10,
+        "max": 27,
+        "temp": 5
+      },
+      "op": "heal",
+      "amount": 6,
+      "after": {
+        "value": 16,
+        "max": 27,
+        "temp": 5
+      }
+    },
+    {
+      "description": "healing stops at max and leaves temp HP alone",
+      "before": {
+        "value": 25,
+        "max": 27,
+        "temp": 5
+      },
+      "op": "heal",
+      "amount": 10,
+      "after": {
+        "value": 27,
+        "max": 27,
+        "temp": 5
+      }
+    },
+    {
+      "description": "healing never restores temp HP",
+      "before": {
+        "value": 27,
+        "max": 27,
+        "temp": 0
+      },
+      "op": "heal",
+      "amount": 5,
+      "after": {
+        "value": 27,
+        "max": 27,
+        "temp": 0
+      }
+    },
+    {
+      "description": "gaining less than the current temp HP keeps the old",
+      "before": {
+        "value": 20,
+        "max": 27,
+        "temp": 8
+      },
+      "op": "gainTemp",
+      "amount": 5,
+      "kept": "old",
+      "message": "Kept 8 temp HP: the old 8 is higher than the new 5.",
+      "after": {
+        "value": 20,
+        "max": 27,
+        "temp": 8
+      }
+    },
+    {
+      "description": "gaining more than the current temp HP takes the new",
+      "before": {
+        "value": 20,
+        "max": 27,
+        "temp": 5
+      },
+      "op": "gainTemp",
+      "amount": 8,
+      "kept": "new",
+      "message": "Now 8 temp HP: the new 8 is higher than the old 5.",
+      "after": {
+        "value": 20,
+        "max": 27,
+        "temp": 8
+      }
+    },
+    {
+      "description": "gaining the same as the current temp HP keeps it",
+      "before": {
+        "value": 20,
+        "max": 27,
+        "temp": 5
+      },
+      "op": "gainTemp",
+      "amount": 5,
+      "kept": "same",
+      "message": "Kept 5 temp HP: the new amount is the same.",
+      "after": {
+        "value": 20,
+        "max": 27,
+        "temp": 5
+      }
+    },
+    {
+      "description": "gaining temp HP with none gives the new amount",
+      "before": {
+        "value": 20,
+        "max": 27,
+        "temp": 0
+      },
+      "op": "gainTemp",
+      "amount": 6,
+      "kept": "new",
+      "message": "Gained 6 temp HP.",
+      "after": {
+        "value": 20,
+        "max": 27,
+        "temp": 6
+      }
+    },
+    {
+      "description": "gaining 0 temp HP keeps the old",
+      "before": {
+        "value": 20,
+        "max": 27,
+        "temp": 4
+      },
+      "op": "gainTemp",
+      "amount": 0,
+      "kept": "old",
+      "message": "Kept 4 temp HP: the old 4 is higher than the new 0.",
+      "after": {
+        "value": 20,
+        "max": 27,
+        "temp": 4
+      }
+    },
+    {
+      "description": "gaining temp HP may go above max HP and never changes max",
+      "before": {
+        "value": 20,
+        "max": 27,
+        "temp": 0
+      },
+      "op": "gainTemp",
+      "amount": 40,
+      "kept": "new",
+      "message": "Gained 40 temp HP.",
+      "after": {
+        "value": 20,
+        "max": 27,
+        "temp": 40
+      }
+    },
+    {
+      "description": "a long rest clears temp HP",
+      "before": {
+        "value": 20,
+        "max": 27,
+        "temp": 5
+      },
+      "op": "rest",
+      "rest": "long",
+      "after": {
+        "value": 20,
+        "max": 27,
+        "temp": 0
+      }
+    },
+    {
+      "description": "a short rest keeps temp HP",
+      "before": {
+        "value": 20,
+        "max": 27,
+        "temp": 5
+      },
+      "op": "rest",
+      "rest": "short",
+      "after": {
+        "value": 20,
+        "max": 27,
+        "temp": 5
+      }
+    }
+  ],
+  "amounts": [
+    {
+      "text": "0",
+      "amount": 0
+    },
+    {
+      "text": "5",
+      "amount": 5
+    },
+    {
+      "text": " 12 ",
+      "amount": 12
+    },
+    {
+      "text": "999",
+      "amount": 999
+    },
+    {
+      "text": "-1",
+      "error": "Type a whole number from 0 to 999."
+    },
+    {
+      "text": "-0.5",
+      "error": "Type a whole number from 0 to 999."
+    },
+    {
+      "text": "2.5",
+      "error": "Type a whole number from 0 to 999."
+    },
+    {
+      "text": "abc",
+      "error": "Type a whole number from 0 to 999."
+    },
+    {
+      "text": "",
+      "error": "Type a whole number from 0 to 999."
+    },
+    {
+      "text": "  ",
+      "error": "Type a whole number from 0 to 999."
+    },
+    {
+      "text": "1000",
+      "error": "Type a whole number from 0 to 999."
+    },
+    {
+      "text": "+3",
+      "error": "Type a whole number from 0 to 999."
+    },
+    {
+      "text": "1e2",
+      "error": "Type a whole number from 0 to 999."
+    },
+    {
+      "text": "7d6",
+      "error": "Type a whole number from 0 to 999."
+    }
+  ]
+}

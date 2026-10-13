@@ -2,20 +2,18 @@
 // and damage or healing by a typed amount take a snapshot when they change something (of the state
 // just before them, labelled with what was done), so Undo returns to the state before the last of
 // those, discarding any +/- and ticks made since. All updates are immutable, so a snapshot can never be altered after it is taken.
+import { damage, gainTemp, heal, type HpState } from '../rules/hp';
 import { applyRest, type RestKind } from '../rules/rest';
-import type { Widget, WidgetSpec } from '../widgets/spec';
+import { withHp, type Widget, type WidgetSpec } from '../widgets/spec';
 
 export const HISTORY_LIMIT = 20;
 
-export type HpChange = 'damage' | 'heal';
+export type HpChange = 'damage' | 'heal' | 'temp';
 
 export type UndoAction =
   | { kind: 'add'; name: string }
   | { kind: 'rest'; rest: RestKind }
   | { kind: 'hp'; name: string; change: HpChange; amount: number };
-
-/** The largest damage or healing typed in one go. */
-export const MAX_AMOUNT = 999;
 
 export interface HistoryEntry {
   /** What was done right after this snapshot was taken; Undo reverses it. */
@@ -60,27 +58,26 @@ export function stepCounter(board: Board, id: number, delta: 1 | -1): Board {
   });
 }
 
-/** Damage or heals a counter by an amount, staying between 0 and max; snapshots for Undo. */
+const UNDO_NAMES: Record<HpChange, string> = { damage: 'damage', heal: 'heal', temp: 'temp HP' };
+
+/**
+ * Damages, heals or gives temp HP to a counter by an amount, by the hit point rule
+ * (src/rules/hp.ts); snapshots for Undo when anything changes. Temp HP of 0 is stored as no field.
+ */
 export function changeHp(board: Board, id: number, change: HpChange, amount: number): Board {
   const target = board.widgets.find((w) => w.id === id);
   if (!target || target.kind !== 'counter') return board;
-  const signed = change === 'damage' ? -amount : amount;
-  const value = Math.min(target.max, Math.max(0, target.value + signed));
-  if (value === target.value) return board;
-  const widgets = board.widgets.map((w) => (w === target ? { ...target, value } : w));
+  const state: HpState = { value: target.value, max: target.max, temp: target.temp ?? 0 };
+  const next =
+    change === 'damage'
+      ? damage(state, amount)
+      : change === 'heal'
+        ? heal(state, amount)
+        : gainTemp(state, amount).state;
+  if (next.value === state.value && next.temp === state.temp) return board;
+  const updated = withHp(target, next.value, next.temp);
+  const widgets = board.widgets.map((w) => (w === target ? updated : w));
   return snapshot(board, { kind: 'hp', name: target.name, change, amount }, widgets);
-}
-
-/** Reads a typed damage or healing amount: a whole number from 1 to MAX_AMOUNT, digits only. */
-export function parseAmount(
-  text: string,
-): { ok: true; amount: number } | { ok: false; error: string } {
-  const trimmed = text.trim();
-  const amount = Number(trimmed);
-  if (!/^\d+$/.test(trimmed) || amount < 1 || amount > MAX_AMOUNT) {
-    return { ok: false, error: `Type a whole number from 1 to ${MAX_AMOUNT}.` };
-  }
-  return { ok: true, amount };
 }
 
 export function toggleItem(board: Board, id: number, index: number): Board {
@@ -106,6 +103,7 @@ export function undoLabel(board: Board): string | null {
   const action = board.history.at(-1)?.action;
   if (!action) return null;
   if (action.kind === 'add') return `Undo add: ${action.name}`;
-  if (action.kind === 'hp') return `Undo ${action.change} ${action.amount}: ${action.name}`;
+  if (action.kind === 'hp')
+    return `Undo ${UNDO_NAMES[action.change]} ${action.amount}: ${action.name}`;
   return `Undo ${action.rest} rest`;
 }

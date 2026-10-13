@@ -256,12 +256,12 @@ describe('sidebar', () => {
     expect(hpValue(wrapper)).toBe('19 / 27');
   });
 
-  it.each(['abc', '-3', '0', '2.5', ''])('refuses the amount %j with a message', async (amount) => {
+  it.each(['abc', '-3', '2.5', ''])('refuses the amount %j with a message', async (amount) => {
     const wrapper = mount(App);
     await add(wrapper, hpText);
     await hit(wrapper, 'Damage', amount);
     expect(sidebar(wrapper).get('[role="alert"]').text()).toBe(
-      'Type a whole number from 1 to 999.',
+      'Type a whole number from 0 to 999.',
     );
     expect(hpValue(wrapper)).toBe('27 / 27');
   });
@@ -345,5 +345,35 @@ describe('sidebar', () => {
     expect(notices.some((n) => n.includes("Saved private spells couldn't be read"))).toBe(true);
     expect(sidebar(wrapper).findAll('.widget')).toHaveLength(0);
     expect(sidebar(wrapper).findAll('button.prepared-spell')).toHaveLength(0);
+  });
+
+  it('shows temp HP, says which temp HP was kept, and takes damage off it first', async () => {
+    const wrapper = mount(App);
+    await add(wrapper, hpText);
+    const temp = () => sidebar(wrapper).get('.temp-value').text();
+    const gain = async (amount: string) => {
+      await wrapper.get('input[aria-label="Temp HP amount for Hit points"]').setValue(amount);
+      await button(wrapper, 'Gain temp HP for Hit points').trigger('click');
+    };
+    expect(temp()).toBe('Temp HP: 0');
+    await gain('8');
+    expect(temp()).toBe('Temp HP: 8');
+    expect(sidebar(wrapper).get('.temp-message').text()).toBe('Gained 8 temp HP.');
+    expect(undoButton(wrapper).text()).toBe('Undo temp HP 8: Hit points');
+    await gain('5');
+    expect(sidebar(wrapper).get('.temp-message').text()).toBe(
+      'Kept 8 temp HP: the old 8 is higher than the new 5.',
+    );
+    await hit(wrapper, 'Damage', '10');
+    expect(temp()).toBe('Temp HP: 0');
+    expect(hpValue(wrapper)).toBe('25 / 27');
+    await gain('-2');
+    expect(sidebar(wrapper).get('[role="alert"]').text()).toBe(
+      'Type a whole number from 0 to 999.',
+    );
+    await gain('4');
+    await button(wrapper, 'Long rest').trigger('click');
+    expect(temp()).toBe('Temp HP: 0');
+    expect(hpValue(wrapper)).toBe('27 / 27');
   });
 });

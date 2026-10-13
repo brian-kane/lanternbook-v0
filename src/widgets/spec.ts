@@ -31,6 +31,8 @@ export interface CounterSpec {
   reset: ResetKind;
   /** Marks the counter as hit points: it gets Damage and Heal by a typed amount. */
   hp?: boolean;
+  /** Temp HP on a hit points counter; missing means 0. See src/rules/hp.ts. */
+  temp?: number;
 }
 
 export interface ChecklistItem {
@@ -50,11 +52,23 @@ export type WidgetSpec = CounterSpec | ChecklistSpec;
 /** A spec once it is on the board. */
 export type Widget = WidgetSpec & { id: number };
 
+/** A copy of a counter with new current and temp HP; temp HP of 0 is stored as no field. */
+export function withHp<T extends { value: number; temp?: number }>(
+  counter: T,
+  value: number,
+  temp: number,
+): T {
+  const next = { ...counter, value };
+  if (temp > 0) next.temp = temp;
+  else delete next.temp;
+  return next;
+}
+
 export type SpecResult = { ok: true; spec: WidgetSpec } | { ok: false; errors: string[] };
 export type WidgetResult = { ok: true; widget: Widget } | { ok: false; errors: string[] };
 
 const FIELDS = {
-  counter: ['version', 'kind', 'name', 'value', 'max', 'reset', 'hp'],
+  counter: ['version', 'kind', 'name', 'value', 'max', 'reset', 'hp', 'temp'],
   checklist: ['version', 'kind', 'name', 'items'],
 } as const;
 
@@ -108,6 +122,13 @@ function check(value: unknown, extraFields: readonly string[]): string[] {
     }
     if (!RESETS.includes(value.reset)) errors.push('reset must be "short", "long" or "none".');
     if ('hp' in value && typeof value.hp !== 'boolean') errors.push('hp must be true or false.');
+    if ('temp' in value) {
+      if (!isWholeIn(value.temp, 0, LIMITS.max)) {
+        errors.push(`temp must be a whole number from 0 to ${LIMITS.max}.`);
+      } else if (value.hp !== true) {
+        errors.push('temp is only for hit points counters; add "hp": true.');
+      }
+    }
   } else {
     checkItems(value.items, errors);
   }
@@ -119,9 +140,11 @@ function check(value: unknown, extraFields: readonly string[]): string[] {
 /** Copies only the known fields, so nothing outside the spec rides along. */
 function copy(value: Json): WidgetSpec {
   if (value.kind === 'counter') {
-    const { version, kind, name, value: count, max, reset, hp } = value;
+    const { version, kind, name, value: count, max, reset, hp, temp } = value;
     const spec = { version, kind, name, value: count, max, reset } as CounterSpec;
-    return 'hp' in value ? { ...spec, hp: hp as boolean } : spec;
+    if ('hp' in value) spec.hp = hp as boolean;
+    if ('temp' in value) spec.temp = temp as number;
+    return spec;
   }
   const items = (value.items as ChecklistItem[]).map(({ text, done }) => ({ text, done }));
   return { version: value.version, kind: 'checklist', name: value.name, items } as ChecklistSpec;

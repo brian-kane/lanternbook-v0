@@ -29,6 +29,13 @@ describe('validateSpec', () => {
     expect(validateSpec(hp())).toStrictEqual({ ok: true, spec: hp() });
   });
 
+  it('accepts temp HP on a hit points counter and copies it', () => {
+    expect(validateSpec({ ...hp(), temp: 5 })).toStrictEqual({
+      ok: true,
+      spec: { ...hp(), temp: 5 },
+    });
+  });
+
   it('keeps hp off a counter that does not set it', () => {
     const result = validateSpec(counter());
     expect(result.ok && 'hp' in result.spec).toBe(false);
@@ -88,6 +95,14 @@ describe('validateSpec', () => {
     ['an unknown counter field', { ...counter(), colour: 'red' }, 'unknown field "colour".'],
     ['a text hp flag', { ...hp(), hp: 'yes' }, 'hp must be true or false.'],
     ['an hp flag on a checklist', { ...checklist(), hp: true }, 'unknown field "hp".'],
+    [
+      'temp HP on a counter that is not hit points',
+      { ...counter(), temp: 3 },
+      'temp is only for hit points counters; add "hp": true.',
+    ],
+    ['negative temp HP', { ...hp(), temp: -1 }, 'temp must be a whole number from 0 to 999.'],
+    ['fractional temp HP', { ...hp(), temp: 2.5 }, 'temp must be a whole number from 0 to 999.'],
+    ['text temp HP', { ...hp(), temp: '5' }, 'temp must be a whole number from 0 to 999.'],
     ['an id in a pasted spec', { ...counter(), id: 4 }, 'unknown field "id".'],
     ['items that are not a list', { ...checklist(), items: 'rope' }, 'items must be a list.'],
     [

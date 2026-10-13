@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { parseAmount, type HpChange } from '../board/board';
+import type { HpChange } from '../board/board';
+import { gainTemp, parseAmount } from '../rules/hp';
 import type { CounterSpec } from '../widgets/spec';
 
-defineProps<{ widget: CounterSpec }>();
+const props = defineProps<{ widget: CounterSpec }>();
 const emit = defineEmits<{ step: [delta: 1 | -1]; hp: [change: HpChange, amount: number] }>();
 
 // Hit points counters also take damage and healing by a typed amount.
@@ -18,6 +19,24 @@ function changeBy(change: HpChange) {
   amountError.value = null;
   amountText.value = '';
   emit('hp', change, result.amount);
+}
+
+// Temp HP does not stack, so every gain says which amount was kept.
+const tempText = ref('');
+const tempError = ref<string | null>(null);
+const tempMessage = ref<string | null>(null);
+function gain() {
+  const result = parseAmount(tempText.value);
+  if (!result.ok) {
+    tempError.value = result.error;
+    tempMessage.value = null;
+    return;
+  }
+  const { value, max, temp } = props.widget;
+  tempError.value = null;
+  tempText.value = '';
+  tempMessage.value = gainTemp({ value, max, temp: temp ?? 0 }, result.amount).message;
+  emit('hp', 'temp', result.amount);
 }
 
 const RESET_LABELS = {
@@ -64,6 +83,24 @@ const RESET_LABELS = {
     </button>
   </div>
   <p v-if="amountError" class="amount-error" role="alert">{{ amountError }}</p>
+  <template v-if="widget.hp">
+    <output class="temp-value">Temp HP: {{ widget.temp ?? 0 }}</output>
+    <div class="amount">
+      <input
+        v-model="tempText"
+        :aria-label="`Temp HP amount for ${widget.name}`"
+        inputmode="numeric"
+        autocomplete="off"
+        placeholder="Amount"
+        @keydown.enter="gain"
+      />
+      <button type="button" :aria-label="`Gain temp HP for ${widget.name}`" @click="gain">
+        Gain temp HP
+      </button>
+    </div>
+    <p v-if="tempError" class="amount-error" role="alert">{{ tempError }}</p>
+    <p v-else-if="tempMessage" class="temp-message" role="status">{{ tempMessage }}</p>
+  </template>
   <p class="hint">{{ RESET_LABELS[widget.reset] }}</p>
 </template>
 
@@ -93,6 +130,14 @@ const RESET_LABELS = {
   min-height: 2.75rem;
   font: inherit;
   font-size: 1rem;
+}
+.temp-value {
+  display: block;
+  margin-top: 0.5rem;
+  font-variant-numeric: tabular-nums;
+}
+.temp-message {
+  margin: 0.25rem 0 0;
 }
 .amount-error {
   margin: 0.25rem 0 0;

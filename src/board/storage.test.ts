@@ -38,6 +38,30 @@ describe('browserStore', () => {
     expect(store.load()).toStrictEqual({ board, notice: null });
   });
 
+  it('loads a board saved before temp HP existed, unchanged and without a notice', () => {
+    // The shape slice 3 saved: a hit points counter with no temp field, and a damage entry.
+    const saved = {
+      widgets: [{ ...hp, value: 20, id: 1 }],
+      history: [
+        {
+          action: { kind: 'hp', name: 'Hit points', change: 'damage', amount: 7 },
+          widgets: [{ ...hp, id: 1 }],
+        },
+      ],
+    };
+    const storage = memory({ [STORAGE_KEY]: JSON.stringify({ version: 1, ...saved }) });
+    expect(browserStore(() => storage).load()).toStrictEqual({ board: saved, notice: null });
+    expect(storage.data.has(BACKUP_KEY)).toBe(false);
+  });
+
+  it('round-trips temp HP and its undo entries', () => {
+    const storage = memory();
+    const store = browserStore(() => storage);
+    const board = changeHp(changeHp(addWidget(emptyBoard(), hp), 1, 'temp', 6), 1, 'damage', 2);
+    expect(store.save(board)).toBeNull();
+    expect(store.load()).toStrictEqual({ board, notice: null });
+  });
+
   it('starts empty and silent when nothing is stored', () => {
     expect(browserStore(() => memory()).load()).toStrictEqual({
       board: emptyBoard(),

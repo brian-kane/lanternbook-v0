@@ -292,5 +292,93 @@
     "rest": "short",
     "before": [],
     "after": []
+  },
+  {
+    "description": "a long rest refills hit points and clears temp HP",
+    "rest": "long",
+    "before": [
+      {
+        "version": 1,
+        "kind": "counter",
+        "name": "Hit points",
+        "value": 20,
+        "max": 27,
+        "reset": "long",
+        "hp": true,
+        "temp": 5,
+        "id": 1
+      }
+    ],
+    "after": [
+      {
+        "version": 1,
+        "kind": "counter",
+        "name": "Hit points",
+        "value": 27,
+        "max": 27,
+        "reset": "long",
+        "hp": true,
+        "id": 1
+      }
+    ]
+  },
+  {
+    "description": "a short rest keeps temp HP",
+    "rest": "short",
+    "before": [
+      {
+        "version": 1,
+        "kind": "counter",
+        "name": "Hit points",
+        "value": 20,
+        "max": 27,
+        "reset": "long",
+        "hp": true,
+        "temp": 5,
+        "id": 1
+      }
+    ],
+    "after": [
+      {
+        "version": 1,
+        "kind": "counter",
+        "name": "Hit points",
+        "value": 20,
+        "max": 27,
+        "reset": "long",
+        "hp": true,
+        "temp": 5,
+        "id": 1
+      }
+    ]
+  },
+  {
+    "description": "a long rest clears temp HP even at full hit points",
+    "rest": "long",
+    "before": [
+      {
+        "version": 1,
+        "kind": "counter",
+        "name": "Hit points",
+        "value": 27,
+        "max": 27,
+        "reset": "long",
+        "hp": true,
+        "temp": 5,
+        "id": 1
+      }
+    ],
+    "after": [
+      {
+        "version": 1,
+        "kind": "counter",
+        "name": "Hit points",
+        "value": 27,
+        "max": 27,
+        "reset": "long",
+        "hp": true,
+        "id": 1
+      }
+    ]
   }
 ]

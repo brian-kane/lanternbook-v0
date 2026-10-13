@@ -8,7 +8,6 @@ import {
   addWidget,
   changeHp,
   emptyBoard,
-  parseAmount,
   restBoard,
   stepCounter,
   toggleItem,
@@ -214,20 +213,42 @@ describe('damage and heal by amount', () => {
   });
 });
 
-describe('parseAmount', () => {
-  it.each([
-    ['7', 7],
-    [' 12 ', 12],
-    ['999', 999],
-    ['1', 1],
-  ])('reads %j as %d', (text, amount) => {
-    expect(parseAmount(text)).toStrictEqual({ ok: true, amount });
+describe('temp HP on the board', () => {
+  const hp: WidgetSpec = JSON.parse(hpText);
+  const counterOf = (board: Board) => board.widgets[0] as { value: number; temp?: number };
+  const withTemp = (): Board => changeHp(addWidget(emptyBoard(), hp), 1, 'temp', 8);
+
+  it('gains temp HP with a snapshot and an Undo label', () => {
+    const before = addWidget(emptyBoard(), hp);
+    const board = withTemp();
+    expect(counterOf(board).temp).toBe(8);
+    expect(undoLabel(board)).toBe('Undo temp HP 8: Hit points');
+    expect(undo(board)).toStrictEqual(before);
   });
 
-  it.each(['', '  ', '0', '-3', '2.5', 'abc', '7d6', '1e2', '1000', '+4'])('rejects %j', (text) => {
-    expect(parseAmount(text)).toStrictEqual({
-      ok: false,
-      error: 'Type a whole number from 1 to 999.',
-    });
+  it('takes no snapshot when the new temp HP is not higher', () => {
+    const board = withTemp();
+    expect(changeHp(board, 1, 'temp', 5)).toBe(board);
+    expect(changeHp(board, 1, 'temp', 8)).toBe(board);
+  });
+
+  it('takes damage off temp HP first, with a snapshot even when only temp HP changes', () => {
+    const board = changeHp(withTemp(), 1, 'damage', 5);
+    expect(counterOf(board)).toMatchObject({ value: 27, temp: 3 });
+    expect(undoLabel(board)).toBe('Undo damage 5: Hit points');
+    const through = changeHp(board, 1, 'damage', 10);
+    expect(counterOf(through).value).toBe(20);
+    expect('temp' in counterOf(through)).toBe(false);
+  });
+
+  it('heals without restoring temp HP', () => {
+    const hurt = changeHp(changeHp(withTemp(), 1, 'damage', 20), 1, 'heal', 30);
+    expect(counterOf(hurt).value).toBe(27);
+    expect('temp' in counterOf(hurt)).toBe(false);
+  });
+
+  it('clears temp HP on a long rest but not a short one', () => {
+    expect(counterOf(restBoard(withTemp(), 'short')).temp).toBe(8);
+    expect('temp' in counterOf(restBoard(withTemp(), 'long'))).toBe(false);
   });
 });

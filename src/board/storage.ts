@@ -2,14 +2,8 @@
 // Whenever anything stored has to be dropped (unreadable data, a bad widget, a bad undo history),
 // the original stored text is first copied unchanged to a backup key, and a notice says what was
 // dropped. Nothing else is written while loading; the main key changes only on the next save.
-import {
-  HISTORY_LIMIT,
-  MAX_AMOUNT,
-  emptyBoard,
-  type Board,
-  type HistoryEntry,
-  type UndoAction,
-} from './board';
+import { MAX_AMOUNT } from '../rules/hp';
+import { HISTORY_LIMIT, emptyBoard, type Board, type HistoryEntry, type UndoAction } from './board';
 import { LIMITS, validateWidget, type Widget } from '../widgets/spec';
 
 // Every key lives under "lanternbook:", because browser storage is shared by every app on the
@@ -65,7 +59,7 @@ function readAction(value: unknown): UndoAction | null {
     kind === 'hp' &&
     typeof name === 'string' &&
     name.length <= LIMITS.name &&
-    (change === 'damage' || change === 'heal') &&
+    (change === 'damage' || change === 'heal' || change === 'temp') &&
     Number.isInteger(amount) &&
     (amount as number) >= 1 &&
     (amount as number) <= MAX_AMOUNT
