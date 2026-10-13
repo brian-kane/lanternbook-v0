@@ -4,6 +4,8 @@
 
 Can someone who is not a developer build and maintain something real, safely, without ever having to choose safety?
 
+lanternbook is both the experiment (the method) and the successor to dnd-command-hub (the product); dnd-command-hub stays the table app until parity.
+
 ## Principles
 
 - **The right way is the lazy way.** Safety arrives as convenience: the easiest path is the safe one. It is never delivered as advice the person has to remember and follow.
