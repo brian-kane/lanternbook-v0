@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import counterText from '../widgets/fixtures/counter.json?raw';
 import checklistText from '../widgets/fixtures/checklist.json?raw';
-import { addWidget, emptyBoard, stepCounter } from './board';
+import hpText from '../widgets/fixtures/hp-counter.json?raw';
+import { addWidget, changeHp, emptyBoard, stepCounter } from './board';
 import { BACKUP_KEY, STORAGE_KEY, browserStore, type KeyValueStorage } from './storage';
 
 const counter = JSON.parse(counterText);
 const checklist = JSON.parse(checklistText);
+const hp = JSON.parse(hpText);
 
 function memory(
   initial: Record<string, string> = {},
@@ -26,6 +28,14 @@ describe('browserStore', () => {
     const store = browserStore(() => storage);
     expect(store.save(sample())).toBeNull();
     expect(store.load()).toStrictEqual({ board: sample(), notice: null });
+  });
+
+  it('round-trips damage and heal in the undo history', () => {
+    const storage = memory();
+    const store = browserStore(() => storage);
+    const board = changeHp(changeHp(addWidget(emptyBoard(), hp), 1, 'damage', 9), 1, 'heal', 2);
+    expect(store.save(board)).toBeNull();
+    expect(store.load()).toStrictEqual({ board, notice: null });
   });
 
   it('starts empty and silent when nothing is stored', () => {
@@ -116,6 +126,11 @@ describe('browserStore', () => {
     ['an unknown action', entry([good], { kind: 'tick' })],
     ['an add without a name', entry([good], { kind: 'add' })],
     ['a rest of an unknown kind', entry([good], { kind: 'rest', rest: 'nap' })],
+    [
+      'an hp change of an unknown kind',
+      entry([good], { kind: 'hp', name: 'HP', change: 'drain', amount: 3 }),
+    ],
+    ['an hp change with no amount', entry([good], { kind: 'hp', name: 'HP', change: 'heal' })],
     ['an entry with no widgets', { action: { kind: 'rest', rest: 'long' } }],
   ])('treats a history entry with %s as unreadable', (_, bad) => {
     const { result } = loadRaw({ version: 1, widgets: [good], history: [entry([]), bad] });

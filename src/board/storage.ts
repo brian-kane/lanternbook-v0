@@ -2,7 +2,14 @@
 // Whenever anything stored has to be dropped (unreadable data, a bad widget, a bad undo history),
 // the original stored text is first copied unchanged to a backup key, and a notice says what was
 // dropped. Nothing else is written while loading; the main key changes only on the next save.
-import { HISTORY_LIMIT, emptyBoard, type Board, type HistoryEntry, type UndoAction } from './board';
+import {
+  HISTORY_LIMIT,
+  MAX_AMOUNT,
+  emptyBoard,
+  type Board,
+  type HistoryEntry,
+  type UndoAction,
+} from './board';
 import { LIMITS, validateWidget, type Widget } from '../widgets/spec';
 
 // Every key lives under "lanternbook:", because browser storage is shared by every app on the
@@ -49,11 +56,22 @@ function readWidgets(list: unknown[]): { widgets: Widget[]; dropped: number } {
 
 function readAction(value: unknown): UndoAction | null {
   if (typeof value !== 'object' || value === null) return null;
-  const { kind, name, rest } = value as Record<string, unknown>;
+  const { kind, name, rest, change, amount } = value as Record<string, unknown>;
   if (kind === 'add' && typeof name === 'string' && name.length <= LIMITS.name) {
     return { kind, name };
   }
   if (kind === 'rest' && (rest === 'short' || rest === 'long')) return { kind, rest };
+  if (
+    kind === 'hp' &&
+    typeof name === 'string' &&
+    name.length <= LIMITS.name &&
+    (change === 'damage' || change === 'heal') &&
+    Number.isInteger(amount) &&
+    (amount as number) >= 1 &&
+    (amount as number) <= MAX_AMOUNT
+  ) {
+    return { kind, name, change, amount: amount as number };
+  }
   return null;
 }
 

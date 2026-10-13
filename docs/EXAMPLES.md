@@ -54,7 +54,7 @@ Spell slots and other resources are plain counters, one per slot level, such as 
 
 ## Undo
 
-**Undo** goes back to the state just before the last **Add** or **Short rest**/**Long rest**, including any +/− and ticks made since. Taps on +/− and ticks are not undone one at a time, and a rest that refills nothing is not recorded. The button names what it will undo, such as **Undo add: Lantern oil flasks** or **Undo long rest**. The app keeps the last 20 adds and rests.
+**Undo** goes back to the state just before the last **Add**, **Short rest**/**Long rest**, **Damage** or **Heal**, including any +/− and ticks made since. Taps on +/− and ticks are not undone one at a time, and a rest, damage or heal that changes nothing is not recorded. The button names what it will undo, such as **Undo add: Lantern oil flasks**, **Undo long rest** or **Undo damage 7: Hit points**. The app keeps the last 20 of these.
 
 ## Limits
 

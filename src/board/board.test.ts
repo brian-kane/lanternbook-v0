@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import counterText from '../widgets/fixtures/counter.json?raw';
 import checklistText from '../widgets/fixtures/checklist.json?raw';
+import hpText from '../widgets/fixtures/hp-counter.json?raw';
 import type { WidgetSpec } from '../widgets/spec';
 import {
   HISTORY_LIMIT,
   addWidget,
+  changeHp,
   emptyBoard,
+  parseAmount,
   restBoard,
   stepCounter,
   toggleItem,
@@ -162,5 +165,69 @@ describe('undoLabel', () => {
     const short = addWidget(drained, shortCounter);
     expect(undoLabel(restBoard(short, 'short'))).toBe('Undo short rest');
     expect(undoLabel(undo(restBoard(drained, 'long')))).toBe('Undo add: Lantern oil flasks');
+  });
+});
+
+describe('damage and heal by amount', () => {
+  const hp: WidgetSpec = JSON.parse(hpText);
+  const hurt = (): Board => changeHp(addWidget(emptyBoard(), hp), 1, 'damage', 10);
+  const value = (board: Board) => (board.widgets[0] as { value: number }).value;
+
+  it('subtracts damage and adds healing by exactly the amount', () => {
+    expect(value(hurt())).toBe(17);
+    expect(value(changeHp(hurt(), 1, 'heal', 4))).toBe(21);
+    expect(value(changeHp(hurt(), 1, 'damage', 1))).toBe(16);
+  });
+
+  it('stops damage at 0 and healing at max', () => {
+    expect(value(changeHp(hurt(), 1, 'damage', 999))).toBe(0);
+    expect(value(changeHp(hurt(), 1, 'heal', 999))).toBe(27);
+  });
+
+  it('snapshots each damage or heal, so Undo reverses exactly that one', () => {
+    const before = hurt();
+    const snapshot = structuredClone(before);
+    const healed = changeHp(before, 1, 'heal', 4);
+    expect(healed.history).toHaveLength(before.history.length + 1);
+    expect(healed.history.at(-1)?.action).toStrictEqual({
+      kind: 'hp',
+      name: 'Hit points',
+      change: 'heal',
+      amount: 4,
+    });
+    expect(undo(healed)).toStrictEqual(snapshot);
+    expect(undoLabel(healed)).toBe('Undo heal 4: Hit points');
+    expect(undoLabel(hurt())).toBe('Undo damage 10: Hit points');
+  });
+
+  it('takes no snapshot when nothing changes', () => {
+    const full = addWidget(emptyBoard(), hp);
+    expect(changeHp(full, 1, 'heal', 5)).toBe(full);
+    const down = changeHp(full, 1, 'damage', 999);
+    expect(changeHp(down, 1, 'damage', 3)).toBe(down);
+    expect(changeHp(full, 99, 'damage', 3)).toBe(full);
+  });
+
+  it('changes only counters', () => {
+    const board = addWidget(emptyBoard(), checklist);
+    expect(changeHp(board, 1, 'damage', 3)).toBe(board);
+  });
+});
+
+describe('parseAmount', () => {
+  it.each([
+    ['7', 7],
+    [' 12 ', 12],
+    ['999', 999],
+    ['1', 1],
+  ])('reads %j as %d', (text, amount) => {
+    expect(parseAmount(text)).toStrictEqual({ ok: true, amount });
+  });
+
+  it.each(['', '  ', '0', '-3', '2.5', 'abc', '7d6', '1e2', '1000', '+4'])('rejects %j', (text) => {
+    expect(parseAmount(text)).toStrictEqual({
+      ok: false,
+      error: 'Type a whole number from 1 to 999.',
+    });
   });
 });
