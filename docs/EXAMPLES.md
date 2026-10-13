@@ -36,7 +36,7 @@ A checklist is a list of items to tick off. Rests leave it alone.
 
 ## Undo
 
-**Undo** goes back to the state just before the last **Add** or **Short rest**/**Long rest**, including any +/− and ticks made since. Taps on +/− and ticks are not undone one at a time. The app keeps the last 20 adds and rests.
+**Undo** goes back to the state just before the last **Add** or **Short rest**/**Long rest**, including any +/− and ticks made since. Taps on +/− and ticks are not undone one at a time, and a rest that refills nothing is not recorded. The button names what it will undo, such as **Undo add: Lantern oil flasks** or **Undo long rest**. The app keeps the last 20 adds and rests.
 
 ## Limits
 

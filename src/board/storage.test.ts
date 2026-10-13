@@ -52,7 +52,12 @@ describe('browserStore', () => {
   });
 
   const BACKED_UP = 'The original data is kept as a backup in this browser.';
+  const BAD_HISTORY_NOTICE = "Saved undo history couldn't be read, so Undo starts fresh.";
   const good = { ...counter, id: 1 };
+  const entry = (widgets: unknown[], action: unknown = { kind: 'add', name: 'Rope' }) => ({
+    action,
+    widgets,
+  });
   const bad = { ...checklist, id: 2, items: null };
 
   function loadRaw(stored: unknown) {
@@ -62,12 +67,12 @@ describe('browserStore', () => {
   }
 
   it('writes no backup for clean data', () => {
-    const { storage } = loadRaw({ version: 1, widgets: [good], history: [[]] });
+    const { storage } = loadRaw({ version: 1, widgets: [good], history: [entry([])] });
     expect(storage.data.has(BACKUP_KEY)).toBe(false);
   });
 
   it('drops a bad widget, keeps the valid widgets and the valid history, and backs up first', () => {
-    const history = [[], [good]];
+    const history = [entry([]), entry([good])];
     const { raw, storage, result } = loadRaw({ version: 1, widgets: [good, bad], history });
     expect(result.board).toStrictEqual({ widgets: [good], history });
     expect(result.notice).toBe(`1 saved widget couldn't be read and was left out. ${BACKED_UP}`);
@@ -89,7 +94,7 @@ describe('browserStore', () => {
     const { raw, storage, result } = loadRaw({
       version: 1,
       widgets: [good],
-      history: [[good], [{ kind: 'timer' }]],
+      history: [entry([good]), entry([{ kind: 'timer' }])],
     });
     expect(result.board).toStrictEqual({ widgets: [good], history: [] });
     expect(result.notice).toBe(
@@ -99,11 +104,23 @@ describe('browserStore', () => {
   });
 
   it('reports both problems when a widget and the history are bad', () => {
-    const { result } = loadRaw({ version: 1, widgets: [good, bad], history: [[bad]] });
+    const { result } = loadRaw({ version: 1, widgets: [good, bad], history: [entry([bad])] });
     expect(result.board).toStrictEqual({ widgets: [good], history: [] });
     expect(result.notice).toBe(
       `1 saved widget couldn't be read and was left out. Saved undo history couldn't be read, so Undo starts fresh. ${BACKED_UP}`,
     );
+  });
+
+  it.each([
+    ['a bare list of widgets', [good]],
+    ['an unknown action', entry([good], { kind: 'tick' })],
+    ['an add without a name', entry([good], { kind: 'add' })],
+    ['a rest of an unknown kind', entry([good], { kind: 'rest', rest: 'nap' })],
+    ['an entry with no widgets', { action: { kind: 'rest', rest: 'long' } }],
+  ])('treats a history entry with %s as unreadable', (_, bad) => {
+    const { result } = loadRaw({ version: 1, widgets: [good], history: [entry([]), bad] });
+    expect(result.board.history).toStrictEqual([]);
+    expect(result.notice).toBe(`${BAD_HISTORY_NOTICE} ${BACKED_UP}`);
   });
 
   it('says so when the backup itself cannot be written', () => {

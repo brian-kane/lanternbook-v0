@@ -2,8 +2,8 @@
 // Whenever anything stored has to be dropped (unreadable data, a bad widget, a bad undo history),
 // the original stored text is first copied unchanged to a backup key, and a notice says what was
 // dropped. Nothing else is written while loading; the main key changes only on the next save.
-import { HISTORY_LIMIT, emptyBoard, type Board } from './board';
-import { validateWidget, type Widget } from '../widgets/spec';
+import { HISTORY_LIMIT, emptyBoard, type Board, type HistoryEntry, type UndoAction } from './board';
+import { LIMITS, validateWidget, type Widget } from '../widgets/spec';
 
 export const STORAGE_KEY = 'lanternbook.board';
 export const BACKUP_KEY = 'lanternbook.board.unreadable';
@@ -45,6 +45,26 @@ function readWidgets(list: unknown[]): { widgets: Widget[]; dropped: number } {
   return { widgets, dropped: list.length - widgets.length };
 }
 
+function readAction(value: unknown): UndoAction | null {
+  if (typeof value !== 'object' || value === null) return null;
+  const { kind, name, rest } = value as Record<string, unknown>;
+  if (kind === 'add' && typeof name === 'string' && name.length <= LIMITS.name) {
+    return { kind, name };
+  }
+  if (kind === 'rest' && (rest === 'short' || rest === 'long')) return { kind, rest };
+  return null;
+}
+
+/** A history entry is readable only if its action and every one of its widgets are. */
+function readEntry(value: unknown): HistoryEntry | null {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return null;
+  const { action, widgets } = value as Record<string, unknown>;
+  const parsed = readAction(action);
+  if (!parsed || !Array.isArray(widgets)) return null;
+  const read = readWidgets(widgets);
+  return read.dropped === 0 ? { action: parsed, widgets: read.widgets } : null;
+}
+
 /** Reads what it can; lists what had to be dropped. Null means nothing was readable. */
 function parse(raw: string): { board: Board; problems: string[] } | null {
   let data: unknown;
@@ -65,16 +85,14 @@ function parse(raw: string): { board: Board; problems: string[] } | null {
   }
 
   // Undo must restore exactly what was there, so the history is kept whole or not at all.
-  const snapshots = history
-    .slice(-HISTORY_LIMIT)
-    .map((snapshot) => (Array.isArray(snapshot) ? readWidgets(snapshot) : null));
-  const historyOk = snapshots.every((read) => read !== null && read.dropped === 0);
+  const entries = history.slice(-HISTORY_LIMIT).map(readEntry);
+  const historyOk = entries.every((entry) => entry !== null);
   if (!historyOk) problems.push(BAD_HISTORY);
 
   return {
     board: {
       widgets: current.widgets,
-      history: historyOk ? snapshots.map((read) => read!.widgets) : [],
+      history: historyOk ? (entries as HistoryEntry[]) : [],
     },
     problems,
   };

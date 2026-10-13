@@ -10,6 +10,7 @@ import {
   stepCounter,
   toggleItem,
   undo,
+  undoLabel,
   type Board,
 } from './board';
 
@@ -112,12 +113,17 @@ describe('undo', () => {
     }
   });
 
-  it('snapshots every rest, even one that refills nothing', () => {
+  it('takes no snapshot for a rest that refills nothing', () => {
     const rested = restBoard(seeded(), 'long');
-    const again = restBoard(rested, 'long');
-    expect(again.widgets).toStrictEqual(rested.widgets);
-    expect(again.history).toHaveLength(rested.history.length + 1);
-    expect(undo(again)).toStrictEqual(rested);
+    expect(restBoard(rested, 'long')).toBe(rested);
+    expect(restBoard(rested, 'short')).toBe(rested);
+  });
+
+  it('records what each snapshot was taken for', () => {
+    const added = addWidget(emptyBoard(), counter);
+    expect(added.history.at(-1)?.action).toStrictEqual({ kind: 'add', name: 'Lantern oil flasks' });
+    const rested = restBoard(stepCounter(added, 1, -1), 'long');
+    expect(rested.history.at(-1)?.action).toStrictEqual({ kind: 'rest', rest: 'long' });
   });
 
   it('ignores steps and ticks that change nothing', () => {
@@ -143,5 +149,18 @@ describe('undo', () => {
   it('does nothing with an empty history', () => {
     const board = emptyBoard();
     expect(undo(board)).toBe(board);
+  });
+});
+
+describe('undoLabel', () => {
+  it('names the add or rest that Undo will reverse', () => {
+    expect(undoLabel(emptyBoard())).toBeNull();
+    const added = addWidget(emptyBoard(), counter);
+    expect(undoLabel(added)).toBe('Undo add: Lantern oil flasks');
+    const drained = stepCounter(stepCounter(added, 1, -1), 1, -1);
+    expect(undoLabel(restBoard(drained, 'long'))).toBe('Undo long rest');
+    const short = addWidget(drained, shortCounter);
+    expect(undoLabel(restBoard(short, 'short'))).toBe('Undo short rest');
+    expect(undoLabel(undo(restBoard(drained, 'long')))).toBe('Undo add: Lantern oil flasks');
   });
 });

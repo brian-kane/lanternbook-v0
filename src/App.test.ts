@@ -14,6 +14,8 @@ async function add(wrapper: VueWrapper, text: string) {
   await wrapper.get('button.add').trigger('click');
 }
 
+const undoButton = (wrapper: VueWrapper) => wrapper.get('button.undo');
+
 const button = (wrapper: VueWrapper, label: string) =>
   wrapper
     .findAll('button')
@@ -24,7 +26,8 @@ describe('App', () => {
     const wrapper = mount(App);
     expect(wrapper.get('h1').text()).toBe('lanternbook');
     expect(wrapper.findAll('.widget')).toHaveLength(0);
-    expect(button(wrapper, 'Undo').attributes('disabled')).toBeDefined();
+    expect(undoButton(wrapper).attributes('disabled')).toBeDefined();
+    expect(undoButton(wrapper).text()).toBe('Undo');
     expect(button(wrapper, 'Short rest').exists()).toBe(true);
     expect(button(wrapper, 'Long rest').exists()).toBe(true);
   });
@@ -68,18 +71,20 @@ describe('App', () => {
     expect(value()).toBe('1 / 3');
     await button(wrapper, 'Long rest').trigger('click');
     expect(value()).toBe('3 / 3');
+    expect(undoButton(wrapper).text()).toBe('Undo long rest');
 
-    await button(wrapper, 'Undo').trigger('click');
+    await undoButton(wrapper).trigger('click');
     expect(value()).toBe('1 / 3');
     expect(ticked()).toStrictEqual([true, false, true]);
+    expect(undoButton(wrapper).text()).toBe('Undo add: Before we leave town');
 
-    await button(wrapper, 'Undo').trigger('click');
+    await undoButton(wrapper).trigger('click');
     expect(wrapper.findAll('.widget')).toHaveLength(1);
     expect(value()).toBe('3 / 3');
 
-    await button(wrapper, 'Undo').trigger('click');
+    await undoButton(wrapper).trigger('click');
     expect(wrapper.findAll('.widget')).toHaveLength(0);
-    expect(button(wrapper, 'Undo').attributes('disabled')).toBeDefined();
+    expect(undoButton(wrapper).attributes('disabled')).toBeDefined();
   });
 
   it('does not offer Undo for steps and ticks alone', async () => {
@@ -90,7 +95,7 @@ describe('App', () => {
     const wrapper = mount(App);
     await button(wrapper, 'Decrease Lantern oil flasks').trigger('click');
     expect(wrapper.get('.counter-value').text()).toBe('2 / 3');
-    expect(button(wrapper, 'Undo').attributes('disabled')).toBeDefined();
+    expect(undoButton(wrapper).attributes('disabled')).toBeDefined();
   });
 
   it('renders names and items as text, never as HTML', async () => {
@@ -117,7 +122,7 @@ describe('App', () => {
     first.unmount();
     const second = mount(App);
     expect(second.get('.counter-value').text()).toBe('2 / 3');
-    await button(second, 'Undo').trigger('click');
+    await undoButton(second).trigger('click');
     expect(second.findAll('.widget')).toHaveLength(0);
   });
 

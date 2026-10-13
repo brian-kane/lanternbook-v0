@@ -1,7 +1,15 @@
 <script setup lang="ts">
-import { ref, shallowRef } from 'vue';
+import { computed, ref, shallowRef } from 'vue';
 import WidgetFrame from './components/WidgetFrame.vue';
-import { addWidget, restBoard, stepCounter, toggleItem, undo, type Board } from './board/board';
+import {
+  addWidget,
+  restBoard,
+  stepCounter,
+  toggleItem,
+  undo,
+  undoLabel,
+  type Board,
+} from './board/board';
 import { browserStore } from './board/storage';
 import type { RestKind } from './rules/rest';
 import { parseSpecText } from './widgets/spec';
@@ -32,6 +40,7 @@ function add() {
 }
 
 const rest = (kind: RestKind) => apply(restBoard(board.value, kind));
+const undoText = computed(() => undoLabel(board.value));
 </script>
 
 <template>
@@ -70,8 +79,8 @@ const rest = (kind: RestKind) => apply(restBoard(board.value, kind));
     <nav class="actions" aria-label="Board actions">
       <button type="button" @click="rest('short')">Short rest</button>
       <button type="button" @click="rest('long')">Long rest</button>
-      <button type="button" :disabled="board.history.length === 0" @click="apply(undo(board))">
-        Undo
+      <button type="button" class="undo" :disabled="!undoText" @click="apply(undo(board))">
+        {{ undoText ?? 'Undo' }}
       </button>
     </nav>
   </main>
@@ -159,6 +168,10 @@ textarea {
 }
 .actions button {
   flex: 1 1 6rem;
+}
+.actions .undo {
+  flex-basis: 100%;
+  overflow-wrap: anywhere;
 }
 :deep(.hint) {
   margin: 0.5rem 0 0;
