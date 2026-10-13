@@ -49,7 +49,7 @@ The script prints each spell with the page its description starts on. After step
 
 Spells and class lists you paste in are kept in this browser only, under the storage key `lanternbook:spells`. They are never written to the repo. Never copy one into a test or fixture: fixtures use invented spells only, and a test fails on any fixture spell that isn't marked as invented.
 
-A pasted spell is one JSON object like this (an invented spell). `level` is 0 for a cantrip up to 9; `school` is one of abjuration, conjuration, divination, enchantment, evocation, illusion, necromancy or transmutation; `classes` may be empty.
+A pasted spell is one JSON object like this (an invented spell). `level` is 0 for a cantrip up to 9; `school` is one of abjuration, conjuration, divination, enchantment, evocation, illusion, necromancy or transmutation; `classes` may be empty. A spell may also have `tables`: a list of tables, each with an optional `caption`, a `header` (a list of column headings) and `rows` (lists of cells, as many as the header). Every cell must be text; no other table fields are allowed.
 
 ```json
 {

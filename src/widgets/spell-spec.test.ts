@@ -115,6 +115,116 @@ describe('validateSpell', () => {
   });
 });
 
+describe('validateSpell tables', () => {
+  const table = () => ({
+    caption: 'Moth count',
+    header: ['d4', 'Moths'],
+    rows: [
+      ['1-2', 'A few'],
+      ['3-4', 'Very many'],
+    ],
+  });
+  const withTables = (tables: unknown) => ({ ...spell(), tables });
+
+  it('accepts a spell with tables, with or without a caption, and copies them', () => {
+    const tables = [table(), { header: table().header, rows: table().rows }];
+    const input = withTables(tables);
+    const result = validateSpell(input);
+    expect(result).toStrictEqual({ ok: true, spell: input });
+    if (!result.ok) return;
+    tables[0]!.rows[0]![0] = 'changed';
+    expect(result.spell.tables![0]!.rows[0]![0]).toBe('1-2');
+  });
+
+  it('leaves a spell without tables without the field', () => {
+    const result = validateSpell(spell());
+    expect(result.ok && 'tables' in result.spell).toBe(false);
+  });
+
+  it.each([
+    ['tables that are not a list', table(), 'tables must be a list.'],
+    ['an empty tables list', [], `tables must have between 1 and ${SPELL_LIMITS.tables} entries.`],
+    [
+      'too many tables',
+      Array.from({ length: SPELL_LIMITS.tables + 1 }, table),
+      `tables must have between 1 and ${SPELL_LIMITS.tables} entries.`,
+    ],
+    ['a table that is not an object', ['d4'], 'table 1 must be an object with a header and rows.'],
+    [
+      'an extra field in a table',
+      [{ ...table(), notes: 'x' }],
+      'table 1 has an unknown field "notes".',
+    ],
+    ['a blank caption', [{ ...table(), caption: ' ' }], 'table 1 caption must not be empty.'],
+    [
+      'an overlong caption',
+      [{ ...table(), caption: 'x'.repeat(SPELL_LIMITS.tableCaption + 1) }],
+      `table 1 caption is longer than ${SPELL_LIMITS.tableCaption} characters.`,
+    ],
+    [
+      'a header that is not a list',
+      [{ ...table(), header: 'd4' }],
+      'table 1 header must be a list.',
+    ],
+    [
+      'too many columns',
+      [
+        {
+          header: Array.from({ length: SPELL_LIMITS.tableColumns + 1 }, (_, i) => `c${i}`),
+          rows: [],
+        },
+      ],
+      `table 1 header must have between 1 and ${SPELL_LIMITS.tableColumns} cells.`,
+    ],
+    [
+      'a blank header cell',
+      [{ ...table(), header: ['d4', ''] }],
+      'table 1 header cell 2 must not be empty.',
+    ],
+    ['rows that are not a list', [{ ...table(), rows: 'x' }], 'table 1 rows must be a list.'],
+    [
+      'no rows',
+      [{ ...table(), rows: [] }],
+      `table 1 must have between 1 and ${SPELL_LIMITS.tableRows} rows.`,
+    ],
+    [
+      'too many rows',
+      [{ ...table(), rows: Array.from({ length: SPELL_LIMITS.tableRows + 1 }, () => ['1', 'a']) }],
+      `table 1 must have between 1 and ${SPELL_LIMITS.tableRows} rows.`,
+    ],
+    [
+      'a row that is not a list',
+      [{ ...table(), rows: ['1 A few'] }],
+      'table 1 row 1 must be a list of cells.',
+    ],
+    [
+      'a row with the wrong cell count',
+      [
+        {
+          ...table(),
+          rows: [
+            ['1-2', 'A few'],
+            ['3-4', 'Very', 'many'],
+          ],
+        },
+      ],
+      'table 1 row 2 has 3 cells; the header has 2.',
+    ],
+    [
+      'an overlong cell',
+      [{ ...table(), rows: [['1-2', 'x'.repeat(SPELL_LIMITS.tableCell + 1)]] }],
+      `table 1 row 1 cell 2 is longer than ${SPELL_LIMITS.tableCell} characters.`,
+    ],
+    [
+      'a blank cell',
+      [{ ...table(), rows: [['1-2', ' ']] }],
+      'table 1 row 1 cell 2 must not be empty.',
+    ],
+  ])('rejects %s with a readable message', (_, tables, message) => {
+    expect(errorsFor(withTables(tables))).toContain(message);
+  });
+});
+
 describe('parseSpellText', () => {
   it('parses and validates pasted text', () => {
     expect(parseSpellText(JSON.stringify(spell()))).toStrictEqual({ ok: true, spell: spell() });

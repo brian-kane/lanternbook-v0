@@ -24,6 +24,11 @@ export const SPELL_LIMITS = {
   classes: 20,
   className: 40,
   classListNames: 500,
+  tables: 10,
+  tableCaption: 80,
+  tableColumns: 10,
+  tableRows: 60,
+  tableCell: 300,
   specText: 10000,
 } as const;
 
@@ -40,6 +45,13 @@ export const SCHOOLS = [
 
 export type School = (typeof SCHOOLS)[number];
 
+/** A table from a spell's description, such as a d10 roll table. */
+export interface SpellTable {
+  caption?: string;
+  header: string[];
+  rows: string[][];
+}
+
 export interface SpellSpec {
   version: typeof SPELL_SPEC_VERSION;
   kind: 'spell';
@@ -53,6 +65,8 @@ export interface SpellSpec {
   duration: string;
   text: string;
   classes: string[];
+  /** Optional, so specs without tables stay valid at version 1. */
+  tables?: SpellTable[];
 }
 
 export type SpellResult = { ok: true; spell: SpellSpec } | { ok: false; errors: string[] };
@@ -70,7 +84,10 @@ const FIELDS = [
   'duration',
   'text',
   'classes',
+  'tables',
 ] as const;
+
+const TABLE_FIELDS = ['caption', 'header', 'rows'] as const;
 
 const TEXT_FIELDS = ['name', 'castingTime', 'range', 'components', 'duration', 'text'] as const;
 
@@ -85,6 +102,63 @@ function checkClasses(classes: unknown, errors: string[]) {
   classes.forEach((value: unknown, i) =>
     checkText(value, `class ${i + 1}`, SPELL_LIMITS.className, errors),
   );
+}
+
+function checkCells(cells: unknown[], label: string, errors: string[]) {
+  cells.forEach((cell, i) =>
+    checkText(cell, `${label} cell ${i + 1}`, SPELL_LIMITS.tableCell, errors),
+  );
+}
+
+function checkTable(table: unknown, n: number, errors: string[]) {
+  const label = `table ${n}`;
+  if (!isObject(table)) {
+    errors.push(`${label} must be an object with a header and rows.`);
+    return;
+  }
+  if ('caption' in table)
+    checkText(table.caption, `${label} caption`, SPELL_LIMITS.tableCaption, errors);
+  const { header, rows } = table;
+  if (!Array.isArray(header)) errors.push(`${label} header must be a list.`);
+  else {
+    if (header.length < 1 || header.length > SPELL_LIMITS.tableColumns) {
+      errors.push(`${label} header must have between 1 and ${SPELL_LIMITS.tableColumns} cells.`);
+    }
+    checkCells(header, `${label} header`, errors);
+  }
+  if (!Array.isArray(rows)) errors.push(`${label} rows must be a list.`);
+  else {
+    if (rows.length < 1 || rows.length > SPELL_LIMITS.tableRows) {
+      errors.push(`${label} must have between 1 and ${SPELL_LIMITS.tableRows} rows.`);
+    }
+    rows.forEach((row: unknown, i) => {
+      const rowLabel = `${label} row ${i + 1}`;
+      if (!Array.isArray(row)) {
+        errors.push(`${rowLabel} must be a list of cells.`);
+        return;
+      }
+      if (Array.isArray(header) && row.length !== header.length) {
+        errors.push(`${rowLabel} has ${row.length} cells; the header has ${header.length}.`);
+      }
+      checkCells(row, rowLabel, errors);
+    });
+  }
+  for (const key of Object.keys(table)) {
+    if (!(TABLE_FIELDS as readonly string[]).includes(key)) {
+      errors.push(`${label} has an unknown field "${key}".`);
+    }
+  }
+}
+
+function checkTables(tables: unknown, errors: string[]) {
+  if (!Array.isArray(tables)) {
+    errors.push('tables must be a list.');
+    return;
+  }
+  if (tables.length < 1 || tables.length > SPELL_LIMITS.tables) {
+    errors.push(`tables must have between 1 and ${SPELL_LIMITS.tables} entries.`);
+  }
+  tables.forEach((table: unknown, i) => checkTable(table, i + 1, errors));
 }
 
 function check(value: unknown): string[] {
@@ -107,14 +181,27 @@ function check(value: unknown): string[] {
   }
   if (typeof value.ritual !== 'boolean') errors.push('ritual must be true or false.');
   checkClasses(value.classes, errors);
+  if ('tables' in value) checkTables(value.tables, errors);
   checkFields(value, FIELDS, errors);
   return errors;
 }
 
+const copyTable = ({ caption, header, rows }: SpellTable): SpellTable => ({
+  ...(caption === undefined ? {} : { caption }),
+  header: [...header],
+  rows: rows.map((row) => [...row]),
+});
+
 /** Copies only the known fields, so nothing outside the spec rides along. */
 function copy(value: Json): SpellSpec {
-  const spell = Object.fromEntries(FIELDS.map((field) => [field, value[field]]));
-  return { ...spell, classes: [...(value.classes as string[])] } as SpellSpec;
+  const fields = FIELDS.filter((field) => field !== 'tables');
+  const spell = Object.fromEntries(fields.map((field) => [field, value[field]]));
+  const tables = value.tables as SpellTable[] | undefined;
+  return {
+    ...spell,
+    classes: [...(value.classes as string[])],
+    ...(tables === undefined ? {} : { tables: tables.map(copyTable) }),
+  } as SpellSpec;
 }
 
 export function validateSpell(value: unknown): SpellResult {
