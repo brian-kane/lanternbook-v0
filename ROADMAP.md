@@ -14,12 +14,13 @@ lanternbook is the long-term successor to dnd-command-hub, built one slice at a 
 
 What I use in a session. I edit this list; nothing is added to it without my say. Switchover means every item I keep on the list works in lanternbook.
 
-- Live HP.
-- Spell slots by level.
-- Resource counters (Wild Shape uses and the like).
-- Short and long rest.
-- Spell text lookup (done).
-- Prepared spell list.
+- Live HP: built (rehearsed once).
+- Temp HP.
+- Spell slots by level: built (rehearsed once).
+- Resource counters (Wild Shape uses and the like): built (rehearsed once).
+- Short and long rest: built (rehearsed once).
+- Spell text lookup: built (rehearsed once).
+- Prepared spell list: built (rehearsed once).
 - Wild Shape current form and its HP.
 - Companion stat block.
 - Homebrew items.
@@ -31,16 +32,18 @@ What I use in a session. I edit this list; nothing is added to it without my say
 
 ## Now
 
-- **Slice 3 - Table sidebar.** HP, spell slots, resource counters, rests and prepared spells in a sidebar beside both tabs.
+- **Slice 4 - temp HP, Prepare button, New counter form.**
+- **Slice 3 - Table sidebar:** built, deployed and rehearsed once; rehearsal notes pending.
 - **Slice 2 - Spell lookup:** built and deployed, waiting on its desk rehearsal.
 
 ## Next
 
-Order decided after slice 2.
+Order decided after slice 4.
 
-- Live HP.
-- Conditions as display-only modifiers.
+- Wild Shape current form and its HP.
 - A companion stat block.
+- Homebrew items.
+- Conditions as display-only modifiers.
 
 ## Later
 
