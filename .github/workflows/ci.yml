@@ -206,6 +206,7 @@ jobs:
         run: pnpm audit
 
   # Publishes the site built by the build job. The only job with write access, and only to Pages.
+  # It waits for every blocking job; audit-all is left out because it is advisory and may fail.
   deploy:
     needs:
       - gitleaks
@@ -217,7 +218,6 @@ jobs:
       - build
       - perf-budget
       - audit-prod
-      - audit-all
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     timeout-minutes: 10

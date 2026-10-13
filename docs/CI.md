@@ -15,4 +15,4 @@ The repository is public, so no token is needed.
 - `actionlint`, `prettier`, `lint`, `typecheck`, `test`, `build`, `perf-budget`: each fails if it examined nothing.
 - `audit-prod` is blocking. `audit-all` is allowed to fail and only keeps dev-dependency advisories visible.
 - `build` also runs `pnpm check:base`: every URL in `dist/index.html`, the manifest's `start_url`, `scope` and icons, and the service worker registration must sit under the base path set in `vite.config.ts`. On a push to main it uploads `dist` as the Pages artifact.
-- `deploy` publishes that artifact to GitHub Pages. It needs every other job, runs only on a push to main, and is the only job with write permissions (`pages: write`, `id-token: write`).
+- `deploy` publishes that artifact to GitHub Pages. It needs every blocking job (all except `audit-all`, which is advisory and may fail), runs only on a push to main, and is the only job with write permissions (`pages: write`, `id-token: write`).
