@@ -45,6 +45,7 @@ Hit points counters also show **Temp HP** with its own amount box and a **Gain t
 - Temp HP does not stack: gaining keeps the higher of the old and the new amount, and a message says which was kept.
 - A long rest clears temp HP; a short rest does not. Temp HP never changes `max`.
 - Amounts are whole numbers from 0 to 999.
+- On a hit points counter, **−** is damage 1 and **+** is healing 1 by these same rules, each with its own undo step. An amount of 0 changes nothing and is not recorded.
 
 A saved hit points counter may carry `"temp"` (a whole number from 0 to 999); without it, temp HP is 0. `"temp"` is only allowed together with `"hp": true`.
 
@@ -64,7 +65,7 @@ Spell slots and other resources are plain counters, one per slot level, such as 
 
 ## Undo
 
-**Undo** goes back to the state just before the last **Add**, **Short rest**/**Long rest**, **Damage**, **Heal** or **Gain temp HP**, including any +/− and ticks made since. Taps on +/− and ticks are not undone one at a time, and a rest, damage, heal or temp HP gain that changes nothing is not recorded (damage that only uses up temp HP is recorded). The button names what it will undo, such as **Undo add: Lantern oil flasks**, **Undo long rest** or **Undo damage 7: Hit points**. The app keeps the last 20 of these.
+**Undo** goes back to the state just before the last **Add**, **Short rest**/**Long rest**, **Damage**, **Heal** or **Gain temp HP**, including any +/− and ticks made since. Taps on +/− of other counters and ticks are not undone one at a time (on a hit points counter, each −/+ is its own undo step), and a rest, damage, heal or temp HP gain that changes nothing is not recorded (damage that only uses up temp HP is recorded). The button names what it will undo, such as **Undo add: Lantern oil flasks**, **Undo long rest** or **Undo damage 7: Hit points**. The app keeps the last 20 of these.
 
 ## Limits
 

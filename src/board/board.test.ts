@@ -252,3 +252,61 @@ describe('temp HP on the board', () => {
     expect('temp' in counterOf(restBoard(withTemp(), 'long'))).toBe(false);
   });
 });
+
+describe('single steps on a hit points counter', () => {
+  const hp: WidgetSpec = JSON.parse(hpText);
+  const counterOf = (board: Board) => board.widgets[0] as { value: number; temp?: number };
+  const fresh = () => addWidget(emptyBoard(), hp);
+  const withTemp = (temp: number) => changeHp(fresh(), 1, 'temp', temp);
+
+  it('takes − as 1 damage through the damage rule: temp HP first', () => {
+    const board = stepCounter(withTemp(3), 1, -1);
+    expect(counterOf(board)).toMatchObject({ value: 27, temp: 2 });
+    const absorbed = stepCounter(withTemp(1), 1, -1);
+    expect(counterOf(absorbed).value).toBe(27);
+    expect('temp' in counterOf(absorbed)).toBe(false);
+    expect(counterOf(stepCounter(fresh(), 1, -1)).value).toBe(26);
+  });
+
+  it('takes the same undo snapshot for − as a typed damage of 1', () => {
+    const before = withTemp(3);
+    const stepped = stepCounter(before, 1, -1);
+    expect(stepped).toStrictEqual(changeHp(before, 1, 'damage', 1));
+    expect(undoLabel(stepped)).toBe('Undo damage 1: Hit points');
+    expect(undo(stepped)).toStrictEqual(before);
+  });
+
+  it('takes + as healing 1: never above max, never touching temp HP, with a snapshot', () => {
+    const hurt = changeHp(withTemp(3), 1, 'damage', 10);
+    const healed = stepCounter(hurt, 1, 1);
+    expect(counterOf(healed)).toMatchObject({ value: 21 });
+    expect('temp' in counterOf(healed)).toBe(false);
+    expect(undoLabel(healed)).toBe('Undo heal 1: Hit points');
+    const full = withTemp(3);
+    expect(stepCounter(full, 1, 1)).toBe(full);
+  });
+
+  it('changes nothing at 0 current HP with no temp HP', () => {
+    const down = changeHp(fresh(), 1, 'damage', 999);
+    expect(stepCounter(down, 1, -1)).toBe(down);
+  });
+
+  it('keeps plain counters stepping without a snapshot', () => {
+    const board = addWidget(emptyBoard(), counter);
+    const stepped = stepCounter(board, 1, -1);
+    expect(stepped.history).toBe(board.history);
+    expect(counterOf(stepped).value).toBe(2);
+  });
+});
+
+describe('amounts of 0', () => {
+  const hp: WidgetSpec = JSON.parse(hpText);
+
+  it.each(['damage', 'heal', 'temp'] as const)(
+    '%s of 0 changes nothing and takes no snapshot',
+    (change) => {
+      const board = changeHp(changeHp(addWidget(emptyBoard(), hp), 1, 'temp', 4), 1, 'damage', 6);
+      expect(changeHp(board, 1, change, 0)).toBe(board);
+    },
+  );
+});

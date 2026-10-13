@@ -151,6 +151,126 @@
       }
     },
     {
+      "description": "single-step damage (−) with temp HP present takes 1 temp HP",
+      "before": {
+        "value": 20,
+        "max": 27,
+        "temp": 3
+      },
+      "op": "damage",
+      "amount": 1,
+      "after": {
+        "value": 20,
+        "max": 27,
+        "temp": 2
+      }
+    },
+    {
+      "description": "single-step damage (−) with 1 temp HP is fully absorbed",
+      "before": {
+        "value": 20,
+        "max": 27,
+        "temp": 1
+      },
+      "op": "damage",
+      "amount": 1,
+      "after": {
+        "value": 20,
+        "max": 27,
+        "temp": 0
+      }
+    },
+    {
+      "description": "single-step damage (−) with no temp HP takes 1 current HP",
+      "before": {
+        "value": 20,
+        "max": 27,
+        "temp": 0
+      },
+      "op": "damage",
+      "amount": 1,
+      "after": {
+        "value": 19,
+        "max": 27,
+        "temp": 0
+      }
+    },
+    {
+      "description": "single-step damage (−) at 0 current HP and no temp HP changes nothing",
+      "before": {
+        "value": 0,
+        "max": 27,
+        "temp": 0
+      },
+      "op": "damage",
+      "amount": 1,
+      "after": {
+        "value": 0,
+        "max": 27,
+        "temp": 0
+      }
+    },
+    {
+      "description": "single-step damage (−) at 0 current HP with temp HP takes 1 temp HP",
+      "before": {
+        "value": 0,
+        "max": 27,
+        "temp": 2
+      },
+      "op": "damage",
+      "amount": 1,
+      "after": {
+        "value": 0,
+        "max": 27,
+        "temp": 1
+      }
+    },
+    {
+      "description": "single-step heal (+) leaves temp HP alone",
+      "before": {
+        "value": 20,
+        "max": 27,
+        "temp": 3
+      },
+      "op": "heal",
+      "amount": 1,
+      "after": {
+        "value": 21,
+        "max": 27,
+        "temp": 3
+      }
+    },
+    {
+      "description": "single-step heal (+) at max changes nothing",
+      "before": {
+        "value": 27,
+        "max": 27,
+        "temp": 3
+      },
+      "op": "heal",
+      "amount": 1,
+      "after": {
+        "value": 27,
+        "max": 27,
+        "temp": 3
+      }
+    },
+    {
+      "description": "healing 0 changes nothing",
+      "before": {
+        "value": 20,
+        "max": 27,
+        "temp": 3
+      },
+      "op": "heal",
+      "amount": 0,
+      "after": {
+        "value": 20,
+        "max": 27,
+        "temp": 3
+      }
+    },
+    {
       "description": "gaining less than the current temp HP keeps the old",
       "before": {
         "value": 20,

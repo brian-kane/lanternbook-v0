@@ -1,7 +1,9 @@
 // The board: the widgets on screen plus an undo history of whole-board snapshots. An add, a rest,
-// and damage or healing by a typed amount take a snapshot when they change something (of the state
-// just before them, labelled with what was done), so Undo returns to the state before the last of
-// those, discarding any +/- and ticks made since. All updates are immutable, so a snapshot can never be altered after it is taken.
+// and damage, healing or temp HP on a hit points counter (typed, or by its −/+ buttons) take a
+// snapshot when they change something (of the state just before them, labelled with what was
+// done), so Undo returns to the state before the last of those, discarding any +/- on other
+// counters and ticks made since. All updates are immutable, so a snapshot can never be altered
+// after it is taken.
 import { damage, gainTemp, heal, type HpState } from '../rules/hp';
 import { applyRest, type RestKind } from '../rules/rest';
 import { withHp, type Widget, type WidgetSpec } from '../widgets/spec';
@@ -50,7 +52,15 @@ export function addWidget(board: Board, spec: WidgetSpec): Board {
   return snapshot(board, { kind: 'add', name: spec.name }, [...board.widgets, { ...spec, id }]);
 }
 
+/**
+ * The −/+ buttons. On a hit points counter they are damage 1 and heal 1 by the hit point rule,
+ * with the same undo snapshot as a typed amount; other counters step without a snapshot.
+ */
 export function stepCounter(board: Board, id: number, delta: 1 | -1): Board {
+  const target = board.widgets.find((w) => w.id === id);
+  if (target?.kind === 'counter' && target.hp) {
+    return changeHp(board, id, delta === -1 ? 'damage' : 'heal', 1);
+  }
   return adjust(board, id, (w) => {
     if (w.kind !== 'counter') return w;
     const value = Math.min(w.max, Math.max(0, w.value + delta));

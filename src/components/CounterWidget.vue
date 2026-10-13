@@ -51,7 +51,7 @@ const RESET_LABELS = {
     <button
       type="button"
       :aria-label="`Decrease ${widget.name}`"
-      :disabled="widget.value <= 0"
+      :disabled="widget.value <= 0 && !(widget.hp && widget.temp)"
       @click="emit('step', -1)"
     >
       −

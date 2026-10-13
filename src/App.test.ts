@@ -400,6 +400,33 @@ describe('sidebar', () => {
     ).toBe('Moth Ladder');
     expect(undoButton(wrapper).text()).toBe(undoBefore);
   });
+
+  it('takes − on hit points through temp HP first, as an undoable damage of 1', async () => {
+    const wrapper = mount(App);
+    await add(wrapper, hpText);
+    await wrapper.get('input[aria-label="Temp HP amount for Hit points"]').setValue('1');
+    await button(wrapper, 'Gain temp HP for Hit points').trigger('click');
+    await button(wrapper, 'Decrease Hit points').trigger('click');
+    expect(hpValue(wrapper)).toBe('27 / 27');
+    expect(sidebar(wrapper).get('.temp-value').text()).toBe('Temp HP: 0');
+    expect(undoButton(wrapper).text()).toBe('Undo damage 1: Hit points');
+    await button(wrapper, 'Decrease Hit points').trigger('click');
+    expect(hpValue(wrapper)).toBe('26 / 27');
+    await button(wrapper, 'Increase Hit points').trigger('click');
+    expect(hpValue(wrapper)).toBe('27 / 27');
+    expect(undoButton(wrapper).text()).toBe('Undo heal 1: Hit points');
+  });
+
+  it('lets − use up temp HP even at 0 current HP', async () => {
+    const wrapper = mount(App);
+    await add(wrapper, hpText);
+    await hit(wrapper, 'Damage', '27');
+    await wrapper.get('input[aria-label="Temp HP amount for Hit points"]').setValue('2');
+    await button(wrapper, 'Gain temp HP for Hit points').trigger('click');
+    expect(button(wrapper, 'Decrease Hit points').attributes('disabled')).toBeUndefined();
+    await button(wrapper, 'Decrease Hit points').trigger('click');
+    expect(sidebar(wrapper).get('.temp-value').text()).toBe('Temp HP: 1');
+  });
 });
 
 describe('New counter form', () => {
