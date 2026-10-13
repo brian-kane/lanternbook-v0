@@ -136,8 +136,21 @@
     "range": "120 feet",
     "components": "V, S",
     "duration": "Concentration, up to 1 minute",
-    "text": "Objects come to life at your command. Choose up to ten nonmagical objects within range that are not being worn or carried. Medium targets count as two objects, Large targets count as four objects, Huge targets count as eight objects. You can’t animate any object larger than Huge. Each target animates and becomes a creature under your control until the spell ends or until reduced to 0 hit points.\n\nAs a bonus action, you can mentally command any creature you made with this spell if the creature is within 500 feet of you (if you control multiple creatures, you can command any or all of them at the same time, issuing the same command to each one). You decide what action the creature will take and where it will move during its next turn, or you can issue a general command, such as to guard a particular chamber or corridor. If you issue no commands, the creature only defends itself against hostile creatures. Once given an order, the creature continues to follow it until its task is complete.\n\nAnimated Object Statistics\n\nSize HP AC Attack Str Dex\nTiny 20 18 +8 to hit, 1d4 + 4 damage 4 18\nSmall 25 16 +6 to hit, 1d8 + 2 damage 6 14\nMedium 40 13 +5 to hit, 2d6 + 1 damage 10 12\nLarge 50 10 +6 to hit, 2d10 + 2\ndamage\n14 10\nHuge 80 10 +8 to hit, 2d12 + 4\ndamage\n18 6\n\nAn animated object is a construct with AC, hit points, attacks, Strength, and Dexterity determined by its size. Its Constitution is 10 and its Intelligence and Wisdom are 3, and its Charisma is 1. Its speed is 30 feet; if the object lacks legs or other appendages it can use for locomotion, it instead has a flying speed of 30 feet and can hover. If the object is securely attached to a surface or a larger object, such as a chain bolted to a wall, its speed is 0. It has blindsight with a radius of 30 feet and is blind beyond that distance. When the animated object drops to 0 hit points, it reverts to its original object form, and any remaining damage carries over to its original object form.\n\nIf you command an object to attack, it can make a single melee attack against a creature within 5 feet of it. It makes a slam attack with an attack bonus and bludgeoning damage determined by its size. The GM might rule that a specific object inflicts slashing or piercing damage based on its form.\n\nAt Higher Levels. If you cast this spell using a spell slot of 6th level or higher, you can animate two additional objects for each slot level above 5th.",
-    "classes": ["bard", "sorcerer", "wizard"]
+    "text": "Objects come to life at your command. Choose up to ten nonmagical objects within range that are not being worn or carried. Medium targets count as two objects, Large targets count as four objects, Huge targets count as eight objects. You can’t animate any object larger than Huge. Each target animates and becomes a creature under your control until the spell ends or until reduced to 0 hit points.\n\nAs a bonus action, you can mentally command any creature you made with this spell if the creature is within 500 feet of you (if you control multiple creatures, you can command any or all of them at the same time, issuing the same command to each one). You decide what action the creature will take and where it will move during its next turn, or you can issue a general command, such as to guard a particular chamber or corridor. If you issue no commands, the creature only defends itself against hostile creatures. Once given an order, the creature continues to follow it until its task is complete.\n\nAn animated object is a construct with AC, hit points, attacks, Strength, and Dexterity determined by its size. Its Constitution is 10 and its Intelligence and Wisdom are 3, and its Charisma is 1. Its speed is 30 feet; if the object lacks legs or other appendages it can use for locomotion, it instead has a flying speed of 30 feet and can hover. If the object is securely attached to a surface or a larger object, such as a chain bolted to a wall, its speed is 0. It has blindsight with a radius of 30 feet and is blind beyond that distance. When the animated object drops to 0 hit points, it reverts to its original object form, and any remaining damage carries over to its original object form.\n\nIf you command an object to attack, it can make a single melee attack against a creature within 5 feet of it. It makes a slam attack with an attack bonus and bludgeoning damage determined by its size. The GM might rule that a specific object inflicts slashing or piercing damage based on its form.\n\nAt Higher Levels. If you cast this spell using a spell slot of 6th level or higher, you can animate two additional objects for each slot level above 5th.",
+    "classes": ["bard", "sorcerer", "wizard"],
+    "tables": [
+      {
+        "caption": "Animated Object Statistics",
+        "header": ["Size", "HP", "AC", "Attack", "Str", "Dex"],
+        "rows": [
+          ["Tiny", "20", "18", "+8 to hit, 1d4 + 4 damage", "4", "18"],
+          ["Small", "25", "16", "+6 to hit, 1d8 + 2 damage", "6", "14"],
+          ["Medium", "40", "13", "+5 to hit, 2d6 + 1 damage", "10", "12"],
+          ["Large", "50", "10", "+6 to hit, 2d10 + 2 damage", "14", "10"],
+          ["Huge", "80", "10", "+8 to hit, 2d12 + 4 damage", "18", "6"]
+        ]
+      }
+    ]
   },
   {
     "version": 1,
@@ -724,8 +737,25 @@
     "range": "90 feet",
     "components": "V, S, M (three nut shells)",
     "duration": "Concentration, up to 1 minute",
-    "text": "This spell assaults and twists creatures’ minds, spawning delusions and provoking uncontrolled action. Each creature in a 10-foot-radius sphere centered on a point you choose within range must succeed on a Wisdom saving throw when you cast this spell or be affected by it.\n\nAn affected target can’t take reactions and must roll a d10 at the start of each of its turns to determine its behavior for that turn.\n\nd10 Behavior\n1 The creature uses all its movement to move in a\nrandom direction. To determine the direction, roll\na d8 and assign a direction to each die face. The\ncreature doesn’t take an action this turn.\n2–6 The creature doesn’t move or take actions this\nturn.\n7–8 The creature uses its action to make a melee\nattack against a randomly determined creature\nwithin its reach. If there is no creature within its\nreach, the creature does nothing this turn.\n9–10 The creature can act and move normally.\n\nAt the end of each of its turns, an affected target can make a Wisdom saving throw. If it succeeds, this effect ends for that target.\n\nAt Higher Levels. When you cast this spell using a spell slot of 5th level or higher, the radius of the sphere increases by 5 feet for each slot level above 4th.",
-    "classes": ["bard", "druid", "sorcerer", "wizard"]
+    "text": "This spell assaults and twists creatures’ minds, spawning delusions and provoking uncontrolled action. Each creature in a 10-foot-radius sphere centered on a point you choose within range must succeed on a Wisdom saving throw when you cast this spell or be affected by it.\n\nAn affected target can’t take reactions and must roll a d10 at the start of each of its turns to determine its behavior for that turn.\n\nAt the end of each of its turns, an affected target can make a Wisdom saving throw. If it succeeds, this effect ends for that target.\n\nAt Higher Levels. When you cast this spell using a spell slot of 5th level or higher, the radius of the sphere increases by 5 feet for each slot level above 4th.",
+    "classes": ["bard", "druid", "sorcerer", "wizard"],
+    "tables": [
+      {
+        "header": ["d10", "Behavior"],
+        "rows": [
+          [
+            "1",
+            "The creature uses all its movement to move in a random direction. To determine the direction, roll a d8 and assign a direction to each die face. The creature doesn’t take an action this turn."
+          ],
+          ["2–6", "The creature doesn’t move or take actions this turn."],
+          [
+            "7–8",
+            "The creature uses its action to make a melee attack against a randomly determined creature within its reach. If there is no creature within its reach, the creature does nothing this turn."
+          ],
+          ["9–10", "The creature can act and move normally."]
+        ]
+      }
+    ]
   },
   {
     "version": 1,
@@ -892,8 +922,44 @@
     "range": "Self (5-mile radius)",
     "components": "V, S, M (burning incense and bits of earth and wood mixed in water)",
     "duration": "Concentration, up to 8 hours",
-    "text": "You take control of the weather within 5 miles of you for the duration. You must be outdoors to cast this spell. Moving to a place where you don’t have a clear path to the sky ends the spell early.\n\nWhen you cast the spell, you change the current weather conditions, which are determined by the GM based on the climate and season. You can change precipitation, temperature, and wind. It takes 1d4 × 10 minutes for the new conditions to take effect. Once they do so, you can change the conditions again. When the spell ends, the weather gradually returns to normal.\n\nWhen you change the weather conditions, find a current condition on the following tables and change its stage by one, up or down. When changing the wind, you can change its direction.\n\nPrecipitation\n\nStage Condition\n1 Clear\n2 Light clouds\n3 Overcast or ground fog\n4 Rain, hail, or snow\n5 Torrential rain, driving hail, or blizzard\n\nTemperature\n\nStage Condition\n1 Unbearable heat\n2 Hot\n3 Warm\n4 Cool\n5 Cold\n6 Arctic cold\n\nWind\n\nStage Condition\n1 Calm\n2 Moderate wind\n3 Strong wind\n4 Gale\n5 Storm",
-    "classes": ["cleric", "druid", "wizard"]
+    "text": "You take control of the weather within 5 miles of you for the duration. You must be outdoors to cast this spell. Moving to a place where you don’t have a clear path to the sky ends the spell early.\n\nWhen you cast the spell, you change the current weather conditions, which are determined by the GM based on the climate and season. You can change precipitation, temperature, and wind. It takes 1d4 × 10 minutes for the new conditions to take effect. Once they do so, you can change the conditions again. When the spell ends, the weather gradually returns to normal.\n\nWhen you change the weather conditions, find a current condition on the following tables and change its stage by one, up or down. When changing the wind, you can change its direction.",
+    "classes": ["cleric", "druid", "wizard"],
+    "tables": [
+      {
+        "caption": "Precipitation",
+        "header": ["Stage", "Condition"],
+        "rows": [
+          ["1", "Clear"],
+          ["2", "Light clouds"],
+          ["3", "Overcast or ground fog"],
+          ["4", "Rain, hail, or snow"],
+          ["5", "Torrential rain, driving hail, or blizzard"]
+        ]
+      },
+      {
+        "caption": "Temperature",
+        "header": ["Stage", "Condition"],
+        "rows": [
+          ["1", "Unbearable heat"],
+          ["2", "Hot"],
+          ["3", "Warm"],
+          ["4", "Cool"],
+          ["5", "Cold"],
+          ["6", "Arctic cold"]
+        ]
+      },
+      {
+        "caption": "Wind",
+        "header": ["Stage", "Condition"],
+        "rows": [
+          ["1", "Calm"],
+          ["2", "Moderate wind"],
+          ["3", "Strong wind"],
+          ["4", "Gale"],
+          ["5", "Storm"]
+        ]
+      }
+    ]
   },
   {
     "version": 1,
@@ -962,8 +1028,20 @@
     "range": "30 feet",
     "components": "V, S, M (a tiny piece of matter of the same type of the item you plan to create)",
     "duration": "Special",
-    "text": "You pull wisps of shadow material from the Shadowfell to create a nonliving object of vegetable matter within range: soft goods, rope, wood, or something similar. You can also use this spell to create mineral objects such as stone, crystal, or metal. The object created must be no larger than a 5-foot cube, and the object must be of a form and material that you have seen before.\n\nThe duration depends on the object’s material. If the object is composed of multiple materials, use the shortest duration.\n\nMaterial Duration\nVegetable matter 1 day\nStone or crystal 12 hours\nPrecious metals 1 hour\nGems 10 minutes\nAdamantine or mithral 1 minute\n\nUsing any material created by this spell as another spell’s material component causes that spell to fail.\n\nAt Higher Levels. When you cast this spell using a spell slot of 6th level or higher, the cube increases by 5 feet for each slot level above 5th.",
-    "classes": ["sorcerer", "wizard"]
+    "text": "You pull wisps of shadow material from the Shadowfell to create a nonliving object of vegetable matter within range: soft goods, rope, wood, or something similar. You can also use this spell to create mineral objects such as stone, crystal, or metal. The object created must be no larger than a 5-foot cube, and the object must be of a form and material that you have seen before.\n\nThe duration depends on the object’s material. If the object is composed of multiple materials, use the shortest duration.\n\nUsing any material created by this spell as another spell’s material component causes that spell to fail.\n\nAt Higher Levels. When you cast this spell using a spell slot of 6th level or higher, the cube increases by 5 feet for each slot level above 5th.",
+    "classes": ["sorcerer", "wizard"],
+    "tables": [
+      {
+        "header": ["Material", "Duration"],
+        "rows": [
+          ["Vegetable matter", "1 day"],
+          ["Stone or crystal", "12 hours"],
+          ["Precious metals", "1 hour"],
+          ["Gems", "10 minutes"],
+          ["Adamantine or mithral", "1 minute"]
+        ]
+      }
+    ]
   },
   {
     "version": 1,
@@ -3384,8 +3462,29 @@
     "range": "Touch",
     "components": "V, S, M (rare oils and unguents worth at least 1,000 gp, which the spell consumes)",
     "duration": "Instantaneous",
-    "text": "You touch a dead humanoid or a piece of a dead humanoid. Provided that the creature has been dead no longer than 10 days, the spell forms a new adult body for it and then calls the soul to enter that body. If the target’s soul isn’t free or willing to do so, the spell fails.\n\nThe magic fashions a new body for the creature to inhabit, which likely causes the creature’s race to change. The GM rolls a d100 and consults the following table to determine what form the creature takes when restored to life, or the GM chooses a form.\n\nd100 Race\n01–04 Dragonborn\n05–13 Dwarf, hill\n14–21 Dwarf, mountain\n22–25 Elf, dark\n26–34 Elf, high\n35–42 Elf, wood\n43–46 Gnome, forest\n47–52 Gnome, rock\n53–56 Half--elf\n57–60 Half--orc\n61–68 Halfling, lightfoot\n69–76 Halfling, stout\n77–96 Human\n97–00 Tiefling\n\nThe reincarnated creature recalls its former life and experiences. It retains the capabilities it had in its original form, except it exchanges its original race for the new one and changes its racial traits accordingly.",
-    "classes": ["druid"]
+    "text": "You touch a dead humanoid or a piece of a dead humanoid. Provided that the creature has been dead no longer than 10 days, the spell forms a new adult body for it and then calls the soul to enter that body. If the target’s soul isn’t free or willing to do so, the spell fails.\n\nThe magic fashions a new body for the creature to inhabit, which likely causes the creature’s race to change. The GM rolls a d100 and consults the following table to determine what form the creature takes when restored to life, or the GM chooses a form.\n\nThe reincarnated creature recalls its former life and experiences. It retains the capabilities it had in its original form, except it exchanges its original race for the new one and changes its racial traits accordingly.",
+    "classes": ["druid"],
+    "tables": [
+      {
+        "header": ["d100", "Race"],
+        "rows": [
+          ["01–04", "Dragonborn"],
+          ["05–13", "Dwarf, hill"],
+          ["14–21", "Dwarf, mountain"],
+          ["22–25", "Elf, dark"],
+          ["26–34", "Elf, high"],
+          ["35–42", "Elf, wood"],
+          ["43–46", "Gnome, forest"],
+          ["47–52", "Gnome, rock"],
+          ["53–56", "Half-elf"],
+          ["57–60", "Half-orc"],
+          ["61–68", "Halfling, lightfoot"],
+          ["69–76", "Halfling, stout"],
+          ["77–96", "Human"],
+          ["97–00", "Tiefling"]
+        ]
+      }
+    ]
   },
   {
     "version": 1,
@@ -3538,8 +3637,26 @@
     "range": "Self",
     "components": "V, S, M (a focus worth at least 1,000 gp, such as a crystal ball, a silver mirror, or a font filled with holy water)",
     "duration": "Concentration, up to 10 minutes",
-    "text": "You can see and hear a particular creature you choose that is on the same plane of existence as you. The target must make a Wisdom saving throw, which is modified by how well you know the target and the sort of physical connection you have to it. If a target knows you’re casting this spell, it can fail the saving throw voluntarily if it wants to be observed.\n\nKnowledge Save Modifier\nSecondhand (you have heard of the target) +5\nFirsthand (you have met the target) +0\nFamiliar (you know the target well) −5\nConnection Save Modifier\nLikeness or picture −2\nPossession or garment −4\nBody part, lock of hair, bit of nail, or the like −10\n\nOn a successful save, the target isn’t affected, and you can’t use this spell against it again for 24 hours.\n\nOn a failed save, the spell creates an invisible sensor within 10 feet of the target. You can see and hear through the sensor as if you were there. The sensor moves with the target, remaining within 10 feet of it for the duration. A creature that can see invisible objects sees the sensor as a luminous orb about the size of your fist.\n\nInstead of targeting a creature, you can choose a location you have seen before as the target of this spell. When you do, the sensor appears at that location and doesn’t move.",
-    "classes": ["bard", "cleric", "druid", "warlock", "wizard"]
+    "text": "You can see and hear a particular creature you choose that is on the same plane of existence as you. The target must make a Wisdom saving throw, which is modified by how well you know the target and the sort of physical connection you have to it. If a target knows you’re casting this spell, it can fail the saving throw voluntarily if it wants to be observed.\n\nOn a successful save, the target isn’t affected, and you can’t use this spell against it again for 24 hours.\n\nOn a failed save, the spell creates an invisible sensor within 10 feet of the target. You can see and hear through the sensor as if you were there. The sensor moves with the target, remaining within 10 feet of it for the duration. A creature that can see invisible objects sees the sensor as a luminous orb about the size of your fist.\n\nInstead of targeting a creature, you can choose a location you have seen before as the target of this spell. When you do, the sensor appears at that location and doesn’t move.",
+    "classes": ["bard", "cleric", "druid", "warlock", "wizard"],
+    "tables": [
+      {
+        "header": ["Knowledge", "Save Modifier"],
+        "rows": [
+          ["Secondhand (you have heard of the target)", "+5"],
+          ["Firsthand (you have met the target)", "+0"],
+          ["Familiar (you know the target well)", "−5"]
+        ]
+      },
+      {
+        "header": ["Connection", "Save Modifier"],
+        "rows": [
+          ["Likeness or picture", "−2"],
+          ["Possession or garment", "−4"],
+          ["Body part, lock of hair, bit of nail, or the like", "−10"]
+        ]
+      }
+    ]
   },
   {
     "version": 1,
@@ -4042,8 +4159,22 @@
     "range": "10 feet",
     "components": "V",
     "duration": "Instantaneous",
-    "text": "This spell instantly transports you and up to eight willing creatures of your choice that you can see within range, or a single object that you can see within range, to a destination you select. If you target an object, it must be able to fit entirely inside a 10-foot cube, and it can’t be held or carried by an unwilling creature.\n\nThe destination you choose must be known to you, and it must be on the same plane of existence as you. Your familiarity with the destination determines whether you arrive there successfully. The GM rolls d100 and consults the table.\n\nFamiliarity Mishap\nSimilar\nArea\nOff\nTarget\nOn\nTarget\nPermanent\ncircle\n— — — 01–100\nAssociated\nobject\n— — — 01–100\nVery familiar 01–05 06–13 14–24 25–100\nSeen casually 01–33 34–43 44–53 54–100\nViewed once 01–43 44–53 54–73 74–100\nDescription 01–43 44–53 54–73 74–100\nFalse\ndestination\n01–50 51–100 — —\n\nFamiliarity. “Permanent circle” means a permanent teleportation circle whose sigil sequence you know. “Associated object” means that you possess an object taken from the desired destination within the last six months, such as a book from a wizard’s library, bed linen from a royal suite, or a chunk of marble from a lich’s secret tomb.\n\n“Very familiar” is a place you have been very often, a place you have carefully studied, or a place you can see when you cast the spell. “Seen casually” is someplace you have seen more than once but with which you aren’t very familiar. “Viewed once” is a place you have seen once, possibly using magic. “Description” is a place whose location and appearance you know through someone else’s description, perhaps from a map.\n\n“False destination” is a place that doesn’t exist. Perhaps you tried to scry an enemy’s sanctum but instead viewed an illusion, or you are attempting to teleport to a familiar location that no longer exists.\n\nOn Target. You and your group (or the target object) appear where you want to.\n\nOff Target. You and your group (or the target object) appear a random distance away from the destination in a random direction. Distance off target is 1d10 × 1d10 percent of the distance that was to be traveled. For example, if you tried to travel 120 miles, landed off target, and rolled a 5 and 3 on the two d10s, then you would be off target by 15 percent, or 18 miles. The GM determines the direction off target randomly by rolling a d8 and designating 1 as north, 2 as northeast, 3 as east, and so on around the points of the compass. If you were teleporting to a coastal city and wound up 18 miles out at sea, you could be in trouble.\n\nSimilar Area. You and your group (or the target object) wind up in a different area that’s visually or thematically similar to the target area. If you are heading for your home laboratory, for example, you might wind up in another wizard’s laboratory or in an alchemical supply shop that has many of the same tools and implements as your laboratory. Generally, you appear in the closest similar place, but since the spell has no range limit, you could conceivably wind up anywhere on the plane.\n\nMishap. The spell’s unpredictable magic results in a difficult journey. Each teleporting creature (or the target object) takes 3d10 force damage, and the GM rerolls on the table to see where you wind up (multiple mishaps can occur, dealing damage each time).",
-    "classes": ["bard", "sorcerer", "wizard"]
+    "text": "This spell instantly transports you and up to eight willing creatures of your choice that you can see within range, or a single object that you can see within range, to a destination you select. If you target an object, it must be able to fit entirely inside a 10-foot cube, and it can’t be held or carried by an unwilling creature.\n\nThe destination you choose must be known to you, and it must be on the same plane of existence as you. Your familiarity with the destination determines whether you arrive there successfully. The GM rolls d100 and consults the table.\n\nFamiliarity. “Permanent circle” means a permanent teleportation circle whose sigil sequence you know. “Associated object” means that you possess an object taken from the desired destination within the last six months, such as a book from a wizard’s library, bed linen from a royal suite, or a chunk of marble from a lich’s secret tomb.\n\n“Very familiar” is a place you have been very often, a place you have carefully studied, or a place you can see when you cast the spell. “Seen casually” is someplace you have seen more than once but with which you aren’t very familiar. “Viewed once” is a place you have seen once, possibly using magic. “Description” is a place whose location and appearance you know through someone else’s description, perhaps from a map.\n\n“False destination” is a place that doesn’t exist. Perhaps you tried to scry an enemy’s sanctum but instead viewed an illusion, or you are attempting to teleport to a familiar location that no longer exists.\n\nOn Target. You and your group (or the target object) appear where you want to.\n\nOff Target. You and your group (or the target object) appear a random distance away from the destination in a random direction. Distance off target is 1d10 × 1d10 percent of the distance that was to be traveled. For example, if you tried to travel 120 miles, landed off target, and rolled a 5 and 3 on the two d10s, then you would be off target by 15 percent, or 18 miles. The GM determines the direction off target randomly by rolling a d8 and designating 1 as north, 2 as northeast, 3 as east, and so on around the points of the compass. If you were teleporting to a coastal city and wound up 18 miles out at sea, you could be in trouble.\n\nSimilar Area. You and your group (or the target object) wind up in a different area that’s visually or thematically similar to the target area. If you are heading for your home laboratory, for example, you might wind up in another wizard’s laboratory or in an alchemical supply shop that has many of the same tools and implements as your laboratory. Generally, you appear in the closest similar place, but since the spell has no range limit, you could conceivably wind up anywhere on the plane.\n\nMishap. The spell’s unpredictable magic results in a difficult journey. Each teleporting creature (or the target object) takes 3d10 force damage, and the GM rerolls on the table to see where you wind up (multiple mishaps can occur, dealing damage each time).",
+    "classes": ["bard", "sorcerer", "wizard"],
+    "tables": [
+      {
+        "header": ["Familiarity", "Mishap", "Similar Area", "Off Target", "On Target"],
+        "rows": [
+          ["Permanent circle", "—", "—", "—", "01–100"],
+          ["Associated object", "—", "—", "—", "01–100"],
+          ["Very familiar", "01–05", "06–13", "14–24", "25–100"],
+          ["Seen casually", "01–33", "34–43", "44–53", "54–100"],
+          ["Viewed once", "01–43", "44–53", "54–73", "74–100"],
+          ["Description", "01–43", "44–53", "54–73", "74–100"],
+          ["False destination", "01–50", "51–100", "—", "—"]
+        ]
+      }
+    ]
   },
   {
     "version": 1,

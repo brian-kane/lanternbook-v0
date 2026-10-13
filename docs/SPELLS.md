@@ -14,7 +14,7 @@ The spell view lists every spell in the SRD 5.1 and any spells you paste in your
 - Spell text, level, school, ritual tag and the four header fields: the "Spell Descriptions" section, pages 114 to 193.
 - Classes and the name allow-list: the "Spell Lists" section, pages 105 to 113.
 - Extraction: [scripts/extract-srd-spells.mjs](../scripts/extract-srd-spells.mjs) reads the PDF's text layer with pdf.js and splits it on the headings and the labelled header lines. It refuses to write anything unless the two sections agree on every name and level.
-- Tables inside a spell (Confusion, Control Weather, Reincarnate, Teleport and a few others) are kept as plain lines, one table row per line.
+- Tables inside a spell (Animate Objects, Confusion, Control Weather, Creation, Reincarnate, Scrying and Teleport) are extracted into the spell's `tables` field and taken out of its text, so they show once, as tables after the text. The script finds the columns from the headings and starts a row on each line that has a cell in every column; a wrapped cell continues the row above.
 - Typos in the source are kept as printed. For example, the At Higher Levels line of Animal Friendship is garbled in the PDF itself.
 
 ### Re-running the extraction
@@ -38,7 +38,7 @@ git diff --stat src/spells/data
 
 The script prints each spell with the page its description starts on. After step 3, the hashes should be these and `git diff` should show no change:
 
-- `srd-spells.json`: `4e3d66a97b98a08328fe105c6def2b6f037b45c5f8426a3b456e904a0848ee5e`
+- `srd-spells.json`: `ab50017cc20a0a72f5a24ccfd3ae1d17fb4a0ed61a3726e04f1eb4edb41fdd6d`
 - `srd-spell-lists.json`: `2c268ff46dc76cfd098db3c9210a9051adfecf492d28dcdda24de7c594df18fe`
 
 ### Checks

@@ -85,6 +85,42 @@ describe('bundled SRD 5.1 spells', () => {
   });
 });
 
+describe('tables in the bundled SRD spells', () => {
+  type Table = { caption?: string; header: string[]; rows: string[][] };
+  const withTables = srdSpells.filter((s) => 'tables' in s) as unknown as {
+    name: string;
+    text: string;
+    tables: Table[];
+  }[];
+
+  it('are on exactly the seven spells whose descriptions have tables', () => {
+    expect(withTables.map((s) => s.name)).toStrictEqual([
+      'Animate Objects',
+      'Confusion',
+      'Control Weather',
+      'Creation',
+      'Reincarnate',
+      'Scrying',
+      'Teleport',
+    ]);
+  });
+
+  it('are not repeated in the spell text', () => {
+    const repeated = withTables.flatMap((spell) =>
+      spell.tables
+        .flatMap((t) => [t.caption ?? '', t.header.join(' '), ...t.rows.map((r) => r.join(' '))])
+        .filter((line) => line !== '' && spell.text.includes(line))
+        .map((line) => `${spell.name}: ${line}`),
+    );
+    expect(repeated).toStrictEqual([]);
+  });
+
+  it('leave no table rows behind as single line breaks in any spell text', () => {
+    const leftovers = srdSpells.filter((s) => /[^\n]\n[^\n]/.test(s.text)).map((s) => s.name);
+    expect(leftovers).toStrictEqual([]);
+  });
+});
+
 describe('spell names anywhere in the repo', () => {
   it('has no possessive name prefix unless the SRD lists that name', () => {
     expect(

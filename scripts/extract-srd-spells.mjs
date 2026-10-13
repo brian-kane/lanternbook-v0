@@ -45,11 +45,17 @@ async function readItems(path) {
 
 /** Turns the PDF's soft-hyphen and non-breaking-hyphen runs into plain hyphens. */
 function clean(text) {
+  // U+00AD soft hyphen, U+2010 hyphen, U+2011 non-breaking hyphen, written as escapes so they show.
   let s = text;
-  for (const run of ['-­‐‑', '­‐‑', '‐‑']) {
+  for (const run of [
+    '-\u00ad\u2010\u2011',
+    '-\u00ad\u2010',
+    '\u00ad\u2010\u2011',
+    '\u2010\u2011',
+  ]) {
     s = s.replaceAll(run, '-');
   }
-  return s.replaceAll('­', '').replaceAll('‑', '-').replaceAll('‐', '-');
+  return s.replaceAll('\u00ad', '').replaceAll('\u2011', '-').replaceAll('\u2010', '-');
 }
 
 /** Groups items into lines: same page, same baseline, in stream order. Drops the page footer. */
@@ -63,8 +69,10 @@ function toLines(items) {
       if (gap > 1.0 && !cur.text.endsWith(' ') && !it.s.startsWith(' ')) cur.text += ' ';
       cur.text += it.s;
       cur.end = it.x + it.w;
+      cur.items.push(it);
     } else {
-      cur = { p: it.p, y: it.y, x: it.x, h: it.h, f: it.f, text: it.s, end: it.x + it.w };
+      const start = { text: it.s, end: it.x + it.w, items: [it] };
+      cur = { p: it.p, y: it.y, x: it.x, h: it.h, f: it.f, ...start };
       lines.push(cur);
     }
   }
@@ -125,6 +133,108 @@ function readSpells(lines) {
   return spells.map(parseSpell);
 }
 
+// Tables use their own fonts: a bold caption (12 pt), bold column headings and plain cells (8.9 pt).
+const TABLE_FONTS = ['g_d0_f4', 'g_d0_f8'];
+const HEADING_FONT = 'g_d0_f8';
+// A cell may start a little left of its heading, where the heading is centred over it.
+const COLUMN_SLACK = 4;
+
+/** Joins items left to right, adding a space only where the PDF leaves a gap. */
+function joinItems(items) {
+  let text = '';
+  let end = null;
+  for (const it of [...items].sort((a, b) => a.x - b.x)) {
+    if (end !== null && it.x - end > 1.0 && !text.endsWith(' ') && !it.s.startsWith(' ')) {
+      text += ' ';
+    }
+    text += it.s;
+    end = it.x + it.w;
+  }
+  return clean(text).trim();
+}
+
+const joinWrapped = (cell, more) =>
+  cell === '' ? more : cell + (cell.endsWith('-') ? '' : ' ') + more;
+
+/**
+ * Builds tables from a spell's table lines. Columns come from the headings: headings stacked
+ * over one another (Teleport) are one column. A visual line with a cell in every column starts a
+ * row; a line with fewer cells continues the row above, as wrapped cells do. Positions are
+ * measured from the page column's left edge, so a table that continues in the next page column
+ * (Confusion) keeps its columns.
+ */
+function readTables(name, tableLines) {
+  const groups = [];
+  let caption = null;
+  for (const l of tableLines) {
+    const isCaption = l.f === HEADING_FONT && l.h >= 10;
+    const isHeading = l.f === HEADING_FONT && l.h < 10;
+    if (isCaption) {
+      caption = l.text.trim();
+      continue;
+    }
+    const current = groups.at(-1);
+    if (!current || caption !== null || (isHeading && current.body.length > 0)) {
+      groups.push({ caption, heading: [], body: [] });
+      caption = null;
+    }
+    const items = l.items
+      .filter((it) => it.s.trim() !== '')
+      .map((it) => ({ ...it, col: l.col, rx: it.x - BASE[l.col] }));
+    groups.at(-1)[isHeading ? 'heading' : 'body'].push(...items);
+  }
+  if (caption !== null) throw new Error(`${name}: table caption "${caption}" has no table`);
+
+  return groups.map(({ caption: title, heading, body }, n) => {
+    const where = `${name}, table ${n + 1}`;
+    if (heading.length === 0 || body.length === 0)
+      throw new Error(`${where}: no headings or no cells`);
+
+    // Overlapping headings form one column, read top line first.
+    const columns = [];
+    for (const it of [...heading].sort((a, b) => a.rx - b.rx)) {
+      const last = columns.at(-1);
+      if (last && it.rx <= last.right) {
+        last.items.push(it);
+        last.right = Math.max(last.right, it.rx + it.w);
+      } else columns.push({ left: it.rx, right: it.rx + it.w, items: [it] });
+    }
+    const header = columns.map((c) => {
+      const ys = [...new Set(c.items.map((it) => it.y))].sort((a, b) => b - a);
+      return ys.map((y) => joinItems(c.items.filter((it) => it.y === y))).join(' ');
+    });
+    const columnOf = (it) => {
+      let index = 0;
+      columns.forEach((c, i) => {
+        if (it.rx >= c.left - COLUMN_SLACK) index = i;
+      });
+      return index;
+    };
+
+    // Visual lines in reading order: page, page column, top to bottom.
+    const byLine = new Map();
+    for (const it of body) {
+      const key = `${it.p}|${it.col}|${it.y}`;
+      if (!byLine.has(key)) byLine.set(key, { p: it.p, col: it.col, y: it.y, items: [] });
+      byLine.get(key).items.push(it);
+    }
+    const visual = [...byLine.values()].sort((a, b) => a.p - b.p || a.col - b.col || b.y - a.y);
+    const rows = [];
+    for (const line of visual) {
+      const cells = columns.map((_, i) => joinItems(line.items.filter((it) => columnOf(it) === i)));
+      if (cells.every((cell) => cell !== '')) rows.push(cells);
+      else if (rows.length === 0) throw new Error(`${where}: first row is not complete`);
+      else {
+        const row = rows.at(-1);
+        cells.forEach((cell, i) => {
+          if (cell !== '') row[i] = joinWrapped(row[i], cell);
+        });
+      }
+    }
+    return { ...(title === null ? {} : { caption: title }), header, rows };
+  });
+}
+
 function parseSpell({ name, page, lines }) {
   const sub = lines[0].text.trim();
   const m = sub.match(/^(?:(\d)\w\w-level (\w+)|(\w+) cantrip)( \(ritual\))?$/);
@@ -151,18 +261,20 @@ function parseSpell({ name, page, lines }) {
   }
   if (field !== 'duration') throw new Error(`${name}: header fields not found`);
 
-  // Paragraphs start indented; bullets and table rows start their own lines.
+  // Paragraphs start indented; bullets start their own lines. Table lines become structured
+  // tables instead of text, and end the paragraph before them.
   const paras = [];
   const kinds = [];
+  const tableLines = [];
   for (const l of lines.slice(i)) {
     const t = l.text.trim();
     if (!t) continue;
     const indent = l.x > BASE[l.col] + 5;
-    if (l.f === 'g_d0_f4' || l.f === 'g_d0_f8') {
-      if (kinds.at(-1) === 'table' && l.h < 10) paras[paras.length - 1] += '\n' + t;
-      else {
-        paras.push(t);
-        kinds.push(l.h < 10 ? 'table' : 'title');
+    if (TABLE_FONTS.includes(l.f)) {
+      tableLines.push(l);
+      if (kinds.at(-1) !== 'table') {
+        paras.push('');
+        kinds.push('table');
       }
       continue;
     }
@@ -180,7 +292,9 @@ function parseSpell({ name, page, lines }) {
       paras[paras.length - 1] = prev + join + t;
     }
   }
-  return { ...rec, text: paras.join('\n\n'), page };
+  const text = paras.filter((para) => para !== '').join('\n\n');
+  const tables = readTables(name, tableLines);
+  return { ...rec, text, ...(tables.length > 0 ? { tables } : {}), page };
 }
 
 const lines = toLines(await readItems(pdfPath));
@@ -223,6 +337,7 @@ const data = [...spells]
     duration: s.duration,
     text: s.text,
     classes: CLASSES.filter((c) => s.name in lists[c]),
+    ...(s.tables ? { tables: s.tables } : {}),
   }));
 const classLists = Object.fromEntries(CLASSES.map((c) => [c, Object.keys(lists[c]).sort(byName)]));
 
