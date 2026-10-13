@@ -23,6 +23,7 @@ export const SPELL_LIMITS = {
   text: 6000,
   classes: 20,
   className: 40,
+  classListNames: 500,
   specText: 10000,
 } as const;
 
@@ -128,4 +129,30 @@ export function parseSpellText(text: string): SpellResult {
     tooLong: `That spell spec is too long (over ${SPELL_LIMITS.specText} characters).`,
   });
   return parsed.ok ? validateSpell(parsed.value) : parsed;
+}
+
+export type ClassListResult =
+  { ok: true; className: string; names: string[] } | { ok: false; errors: string[] };
+
+/** Checks a stored or pasted class list: a class name and the spell names on it. */
+export function checkClassList(className: unknown, names: unknown): string[] {
+  const errors: string[] = [];
+  checkText(className, 'class name', SPELL_LIMITS.className, errors);
+  if (!Array.isArray(names)) return [...errors, 'spell names must be a list.'];
+  if (names.length === 0) errors.push('Add at least one spell name, one per line.');
+  if (names.length > SPELL_LIMITS.classListNames) {
+    errors.push(`A class list can have at most ${SPELL_LIMITS.classListNames} spell names.`);
+  }
+  names.forEach((name: unknown, i) =>
+    checkText(name, `spell name ${i + 1}`, SPELL_LIMITS.name, errors),
+  );
+  return errors;
+}
+
+/** Turns a pasted class list (one spell name per line) into a checked list. */
+export function parseClassList(className: string, text: string): ClassListResult {
+  const name = className.trim();
+  const names = [...new Set(text.split(/\r?\n/).map((line) => line.trim()))].filter(Boolean);
+  const errors = checkClassList(name, names);
+  return errors.length > 0 ? { ok: false, errors } : { ok: true, className: name, names };
 }

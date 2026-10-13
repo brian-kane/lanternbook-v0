@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import inventedText from '../spells/fixtures/invented-spells.json?raw';
 import spellsDoc from '../../docs/SPELLS.md?raw';
-import { SCHOOLS, SPELL_LIMITS, parseSpellText, validateSpell } from './spell-spec';
+import { SCHOOLS, SPELL_LIMITS, parseClassList, parseSpellText, validateSpell } from './spell-spec';
 
 type Json = Record<string, unknown>;
 const invented = (): Json[] => JSON.parse(inventedText);
@@ -141,5 +141,37 @@ describe('docs/SPELLS.md', () => {
   it('shows the first invented fixture spell, so the example can be pasted as-is', () => {
     const blocks = [...spellsDoc.matchAll(/```json\n([\s\S]*?)```/g)].map((m) => JSON.parse(m[1]!));
     expect(blocks).toStrictEqual([spell()]);
+  });
+});
+
+describe('parseClassList', () => {
+  it('takes one spell name per line, trimmed, skipping blanks and repeats', () => {
+    expect(
+      parseClassList(' Artificer ', 'Lantern Hum\n\n  Pebble Count \r\nLantern Hum\n'),
+    ).toStrictEqual({
+      ok: true,
+      className: 'Artificer',
+      names: ['Lantern Hum', 'Pebble Count'],
+    });
+  });
+
+  it.each([
+    ['a blank class name', ' ', 'Lantern Hum', 'class name must not be empty.'],
+    ['no spell names', 'Artificer', ' \n ', 'Add at least one spell name, one per line.'],
+    [
+      'a name over the cap',
+      'Artificer',
+      'x'.repeat(SPELL_LIMITS.name + 1),
+      `spell name 1 is longer than ${SPELL_LIMITS.name} characters.`,
+    ],
+    [
+      'too many names',
+      'Artificer',
+      Array.from({ length: SPELL_LIMITS.classListNames + 1 }, (_, i) => `s${i}`).join('\n'),
+      `A class list can have at most ${SPELL_LIMITS.classListNames} spell names.`,
+    ],
+  ])('rejects %s', (_, className, text, message) => {
+    const result = parseClassList(className, text);
+    expect(result.ok ? [] : result.errors).toContain(message);
   });
 });
