@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import counterText from './fixtures/counter.json?raw';
 import checklistText from './fixtures/checklist.json?raw';
+import hpText from './fixtures/hp-counter.json?raw';
 import examplesText from '../../docs/EXAMPLES.md?raw';
 import { LIMITS, parseSpecText, validateSpec, validateWidget } from './spec';
 
 type Json = Record<string, unknown>;
 const counter = (): Json => JSON.parse(counterText);
 const checklist = (): Json => JSON.parse(checklistText);
+const hp = (): Json => JSON.parse(hpText);
 
 function without(value: Json, key: string): Json {
   const copy = { ...value };
@@ -21,9 +23,15 @@ function errorsFor(value: unknown): string[] {
 }
 
 describe('validateSpec', () => {
-  it('accepts both example specs unchanged', () => {
+  it('accepts the example specs unchanged', () => {
     expect(validateSpec(counter())).toStrictEqual({ ok: true, spec: counter() });
     expect(validateSpec(checklist())).toStrictEqual({ ok: true, spec: checklist() });
+    expect(validateSpec(hp())).toStrictEqual({ ok: true, spec: hp() });
+  });
+
+  it('keeps hp off a counter that does not set it', () => {
+    const result = validateSpec(counter());
+    expect(result.ok && 'hp' in result.spec).toBe(false);
   });
 
   it.each([
@@ -78,6 +86,8 @@ describe('validateSpec', () => {
       'reset must be "short", "long" or "none".',
     ],
     ['an unknown counter field', { ...counter(), colour: 'red' }, 'unknown field "colour".'],
+    ['a text hp flag', { ...hp(), hp: 'yes' }, 'hp must be true or false.'],
+    ['an hp flag on a checklist', { ...checklist(), hp: true }, 'unknown field "hp".'],
     ['an id in a pasted spec', { ...counter(), id: 4 }, 'unknown field "id".'],
     ['items that are not a list', { ...checklist(), items: 'rope' }, 'items must be a list.'],
     [
@@ -177,10 +187,10 @@ describe('validateWidget', () => {
 });
 
 describe('docs/EXAMPLES.md', () => {
-  it('shows exactly the two fixture specs, so the docs can be pasted as-is', () => {
+  it('shows exactly the three fixture specs, so the docs can be pasted as-is', () => {
     const blocks = [...examplesText.matchAll(/```json\n([\s\S]*?)```/g)].map((m) =>
       JSON.parse(m[1]!),
     );
-    expect(blocks).toStrictEqual([counter(), checklist()]);
+    expect(blocks).toStrictEqual([counter(), checklist(), hp()]);
   });
 });

@@ -29,6 +29,8 @@ export interface CounterSpec {
   value: number;
   max: number;
   reset: ResetKind;
+  /** Marks the counter as hit points: it gets Damage and Heal by a typed amount. */
+  hp?: boolean;
 }
 
 export interface ChecklistItem {
@@ -52,7 +54,7 @@ export type SpecResult = { ok: true; spec: WidgetSpec } | { ok: false; errors: s
 export type WidgetResult = { ok: true; widget: Widget } | { ok: false; errors: string[] };
 
 const FIELDS = {
-  counter: ['version', 'kind', 'name', 'value', 'max', 'reset'],
+  counter: ['version', 'kind', 'name', 'value', 'max', 'reset', 'hp'],
   checklist: ['version', 'kind', 'name', 'items'],
 } as const;
 
@@ -105,6 +107,7 @@ function check(value: unknown, extraFields: readonly string[]): string[] {
       errors.push(`value must be a whole number from 0 to max${maxOk ? ` (${value.max})` : ''}.`);
     }
     if (!RESETS.includes(value.reset)) errors.push('reset must be "short", "long" or "none".');
+    if ('hp' in value && typeof value.hp !== 'boolean') errors.push('hp must be true or false.');
   } else {
     checkItems(value.items, errors);
   }
@@ -116,8 +119,9 @@ function check(value: unknown, extraFields: readonly string[]): string[] {
 /** Copies only the known fields, so nothing outside the spec rides along. */
 function copy(value: Json): WidgetSpec {
   if (value.kind === 'counter') {
-    const { version, kind, name, value: count, max, reset } = value;
-    return { version, kind, name, value: count, max, reset } as CounterSpec;
+    const { version, kind, name, value: count, max, reset, hp } = value;
+    const spec = { version, kind, name, value: count, max, reset } as CounterSpec;
+    return 'hp' in value ? { ...spec, hp: hp as boolean } : spec;
   }
   const items = (value.items as ChecklistItem[]).map(({ text, done }) => ({ text, done }));
   return { version: value.version, kind: 'checklist', name: value.name, items } as ChecklistSpec;

@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "kind": "counter",
+  "name": "Hit points",
+  "value": 27,
+  "max": 27,
+  "reset": "long",
+  "hp": true
+}

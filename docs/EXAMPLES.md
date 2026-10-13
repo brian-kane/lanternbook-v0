@@ -1,6 +1,6 @@
 # Example widget specs
 
-Paste one of these into the box at the top of the app and press **Add**. Both are also the starting fixtures for the tests (`src/widgets/fixtures/`), and a test fails if this page and the fixtures drift apart.
+Paste one of these into the box at the top of the app and press **Add**. All three are also the starting fixtures for the tests (`src/widgets/fixtures/`), and a test fails if this page and the fixtures drift apart.
 
 ## Counter
 
@@ -33,6 +33,24 @@ A checklist is a list of items to tick off. Rests leave it alone.
   ]
 }
 ```
+
+## Hit points
+
+A counter with `"hp": true` is your hit points. It sits in the sidebar with a box for an amount and **Damage** and **Heal** buttons: damage stops at 0 and healing stops at `max`. With `"reset": "long"`, a long rest refills it.
+
+```json
+{
+  "version": 1,
+  "kind": "counter",
+  "name": "Hit points",
+  "value": 27,
+  "max": 27,
+  "reset": "long",
+  "hp": true
+}
+```
+
+Spell slots and other resources are plain counters, one per slot level, such as `"name": "Level 1 slots"` with `"reset": "long"` (or `"short"` for slots that come back on a short rest).
 
 ## Undo
 
