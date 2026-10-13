@@ -1,0 +1,58 @@
+[
+  {
+    "version": 1,
+    "kind": "spell",
+    "name": "Lantern Hum",
+    "level": 0,
+    "school": "illusion",
+    "ritual": false,
+    "castingTime": "1 action",
+    "range": "30 feet",
+    "components": "V",
+    "duration": "1 minute",
+    "text": "Invented for lanternbook tests. A soft hum follows one lantern you can see.",
+    "classes": ["bard", "wizard"]
+  },
+  {
+    "version": 1,
+    "kind": "spell",
+    "name": "Pebble Count",
+    "level": 1,
+    "school": "divination",
+    "ritual": true,
+    "castingTime": "10 minutes",
+    "range": "Self",
+    "components": "V, S, M (a pebble)",
+    "duration": "Instantaneous",
+    "text": "Invented for lanternbook tests. You learn how many pebbles are in a pocket.\n\nA second paragraph keeps its line break.",
+    "classes": ["druid"]
+  },
+  {
+    "version": 1,
+    "kind": "spell",
+    "name": "Won't Stay Lit",
+    "level": 3,
+    "school": "transmutation",
+    "ritual": false,
+    "castingTime": "1 bonus action",
+    "range": "Touch",
+    "components": "S",
+    "duration": "Concentration, up to 1 hour",
+    "text": "Invented for lanternbook tests. One candle you touch keeps going out.",
+    "classes": ["cleric", "druid", "wizard"]
+  },
+  {
+    "version": 1,
+    "kind": "spell",
+    "name": "Moth Ladder",
+    "level": 9,
+    "school": "conjuration",
+    "ritual": false,
+    "castingTime": "1 hour",
+    "range": "60 feet",
+    "components": "V, S",
+    "duration": "Until dispelled",
+    "text": "Invented for lanternbook tests. A ladder of moths reaches the nearest roof.",
+    "classes": []
+  }
+]
