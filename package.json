@@ -20,6 +20,7 @@
     "test:watch": "vitest",
     "test:ci": "node scripts/test-ci.mjs",
     "perf": "node scripts/check-bundle-size.mjs",
+    "check:base": "node scripts/check-base-path.mjs",
     "audit:prod": "node scripts/check-audit.mjs",
     "prepare": "husky"
   },

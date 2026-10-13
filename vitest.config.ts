@@ -1,9 +1,13 @@
 import vue from '@vitejs/plugin-vue';
 import { defineConfig } from 'vitest/config';
+import { base } from './vite.config';
 
 export default defineConfig({
   plugins: [vue()],
   test: {
+    // Vitest serves tests from "/" whatever `base` says, so the base path from vite.config.ts is
+    // passed in here; src/main.test.ts fails if the two ever disagree.
+    env: { BASE_URL: base },
     environment: 'jsdom',
     include: ['src/**/*.test.ts'],
     setupFiles: ['src/test/setup.ts'],

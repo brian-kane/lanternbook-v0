@@ -2,6 +2,7 @@
 // modulepreload links, gzipped) and compares it with the ceiling in perf-budget.json.
 // Measuring a file-name pattern such as index-*.js instead would drift from what loads.
 import { reportError } from './ci-annotate.mjs';
+import { viteBase } from './vite-base.mjs';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { gzipSync } from 'node:zlib';
@@ -12,6 +13,8 @@ function fail(message) {
 }
 
 const distDir = 'dist';
+// Asset URLs in index.html start with the base path; the files sit directly under dist.
+const base = await viteBase('perf budget');
 const htmlPath = join(distDir, 'index.html');
 if (!existsSync(htmlPath)) fail(`${htmlPath} missing; run the build first`);
 
@@ -29,7 +32,9 @@ if (local.length === 0) fail('index.html loads no local scripts; nothing to meas
 
 let bytes = 0;
 for (const url of local) {
-  const file = join(distDir, url.replace(/^\//, ''));
+  if (!url.startsWith(base))
+    fail(`index.html loads ${url}, which is outside the base path ${base}`);
+  const file = join(distDir, url.slice(base.length));
   if (!existsSync(file)) fail(`index.html references ${url} but ${file} is missing`);
   const gz = gzipSync(readFileSync(file)).length;
   console.log(`  ${url}: ${(gz / 1024).toFixed(1)} KiB gzip`);

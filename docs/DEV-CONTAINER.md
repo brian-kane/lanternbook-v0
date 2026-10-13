@@ -1,5 +1,9 @@
 # Dev container
 
+## Running the app
+
+`pnpm dev` serves the app at <http://localhost:5173/lanternbook/>; VS Code forwards the port. The `/lanternbook/` path matches the GitHub Pages address and is set once, as `base` in `vite.config.ts`. Plain `http://localhost:5173/` redirects there.
+
 ## Behind a TLS-inspecting proxy
 
 A TLS-inspecting proxy re-signs HTTPS traffic with its own CA. The host trusts that CA, but a fresh container does not, so the first download fails. In `scripts/setup.sh` that shows up as curl exit 60, `SSL certificate problem: self-signed certificate in certificate chain`. To confirm, run this inside the container:
