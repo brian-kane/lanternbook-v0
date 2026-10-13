@@ -21,7 +21,7 @@ What I use in a session. I edit this list; nothing is added to it without my say
 - Short and long rest: built (rehearsed once).
 - Spell text lookup: built (rehearsed once).
 - Prepared spell list: built (rehearsed once).
-- Wild Shape current form and its HP.
+- Wild Shape current form and its HP. This is next, and gets planned with me before anything is built: it needs a second SRD extraction (beast stat blocks) and an agreed HP rule.
 - Companion stat block.
 - Homebrew items.
 - Conditions as display-only modifiers.
@@ -32,7 +32,8 @@ What I use in a session. I edit this list; nothing is added to it without my say
 
 ## Now
 
-- **Slice 4 - temp HP, Prepare button, New counter form.**
+- **Slice 4b - single-step HP buttons use the damage rule; spell slots form.**
+- **Slice 4 - temp HP, Prepare button, New counter form:** built and deployed.
 - **Slice 3 - Table sidebar:** built, deployed and rehearsed once; rehearsal notes pending.
 - **Slice 2 - Spell lookup:** built and deployed, waiting on its desk rehearsal.
 
@@ -40,10 +41,14 @@ What I use in a session. I edit this list; nothing is added to it without my say
 
 Order decided after slice 4.
 
-- Wild Shape current form and its HP.
+- Wild Shape current form and its HP. This is next, and gets planned with me before anything is built: it needs a second SRD extraction (beast stat blocks) and an agreed HP rule.
 - A companion stat block.
 - Homebrew items.
 - Conditions as display-only modifiers.
+
+## Decisions
+
+- No checklist form until I have used a checklist.
 
 ## Later
 
