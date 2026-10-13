@@ -48,6 +48,8 @@ const unmatched = computed(() =>
 const found = computed(() => prepared.value.filter((name) => !unmatched.value.includes(name)));
 
 const preparedText = ref(prepared.value.join('\n'));
+// Keep the edit box in step when a card's Prepare button changes the list.
+watch(prepared, (names) => (preparedText.value = names.join('\n')));
 const preparedErrors = ref<string[]>([]);
 function savePrepared() {
   const result = parseClassList(PREPARED_LIST, preparedText.value);

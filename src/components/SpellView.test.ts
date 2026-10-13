@@ -203,7 +203,7 @@ describe('SpellView', () => {
     expect(localStorage.getItem(SPELLS_BACKUP_KEY)).toContain('Artificer');
   });
 
-  it('renders a spell without tables exactly as before tables existed', async () => {
+  it('renders a spell without tables as before tables existed, plus its Prepare button', async () => {
     const wrapper = await open();
     const card = wrapper.findAll('.spell-card').find((c) => c.get('h2').text() === 'Pebble Count')!;
     expect(card.find('table').exists()).toBe(false);
@@ -229,7 +229,7 @@ describe('SpellView', () => {
         </dl>
         <p data-v-9aea437f="" class="spell-text">Invented for lanternbook tests. You learn how many pebbles are in a pocket.
 
-          A second paragraph keeps its line break.</p>
+          A second paragraph keeps its line break.</p><button data-v-9aea437f="" type="button" class="prepare" aria-pressed="false">Prepare</button>
       </article>"
     `);
   });
@@ -271,5 +271,35 @@ describe('SpellView', () => {
     const wrapper = await open({ open: 'Not A Spell' });
     expect(names(wrapper)).toStrictEqual([]);
     expect(wrapper.get('.result-count').text()).toBe('No spell named “Not A Spell” was found.');
+  });
+
+  it('prepares and unprepares a spell from its card, saying so in text', async () => {
+    const wrapper = await open();
+    const card = () =>
+      wrapper.findAll('.spell-card').find((c) => c.get('h2').text() === 'Pebble Count')!;
+    expect(card().find('.prepared-tag').exists()).toBe(false);
+    expect(card().get('button.prepare').text()).toBe('Prepare');
+    expect(card().get('button.prepare').attributes('aria-pressed')).toBe('false');
+    await card().get('button.prepare').trigger('click');
+    expect(card().get('.prepared-tag').text()).toBe('Prepared');
+    expect(card().get('button.prepare').text()).toBe('Unprepare');
+    expect(card().get('button.prepare').attributes('aria-pressed')).toBe('true');
+    expect(wrapper.findAll('.prepared-tag')).toHaveLength(1);
+    expect(JSON.parse(localStorage.getItem(SPELLS_KEY)!).classLists).toStrictEqual({
+      Prepared: ['Pebble Count'],
+    });
+    await card().get('button.prepare').trigger('click');
+    expect(card().find('.prepared-tag').exists()).toBe(false);
+    expect(JSON.parse(localStorage.getItem(SPELLS_KEY)!).classLists).toStrictEqual({});
+  });
+
+  it('prepares a private spell too', async () => {
+    const wrapper = await open();
+    await pasteSpell(wrapper, JSON.stringify(privateSpell));
+    const card = wrapper.findAll('.spell-card').find((c) => c.get('h2').text() === 'Quiet Kettle')!;
+    await card.get('button.prepare').trigger('click');
+    expect(JSON.parse(localStorage.getItem(SPELLS_KEY)!).classLists).toStrictEqual({
+      Prepared: ['Quiet Kettle'],
+    });
   });
 });

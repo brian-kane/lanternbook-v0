@@ -18,3 +18,22 @@ export function setClassList(lists: ClassLists, name: string, names: string[] | 
   const others = Object.entries(lists).filter(([key]) => normalize(key) !== normalize(name));
   return Object.fromEntries(names === null ? others : [...others, [name, names]]);
 }
+
+/** Whether a spell name is on the Prepared list, ignoring case and apostrophe style. */
+export function isPrepared(data: PrivateSpells, name: string): boolean {
+  return preparedNames(data).some((n) => normalize(n) === normalize(name));
+}
+
+/** Adds the spell name to the Prepared list, or removes every entry matching it. */
+export function togglePrepared(data: PrivateSpells, name: string): PrivateSpells {
+  const names = preparedNames(data);
+  const kept = names.filter((n) => normalize(n) !== normalize(name));
+  const next = kept.length < names.length ? kept : [...names, name];
+  const listName =
+    Object.keys(data.classLists).find((key) => normalize(key) === normalize(PREPARED_LIST)) ??
+    PREPARED_LIST;
+  return {
+    ...data,
+    classLists: setClassList(data.classLists, listName, next.length > 0 ? next : null),
+  };
+}

@@ -3,7 +3,7 @@
 // and class. The SRD data loads here, on demand, so it is not part of the startup bundle.
 import { computed, onMounted, ref, shallowRef } from 'vue';
 import { filterSpells, normalize, unmatchedNames } from '../spells/filter';
-import { setClassList } from '../spells/prepared';
+import { preparedNames, setClassList, togglePrepared } from '../spells/prepared';
 import { usePrivateSpells } from '../spells/private-state';
 import { loadSrdSpells } from '../spells/srd';
 import {
@@ -72,6 +72,10 @@ const unmatched = computed(() =>
     ]),
   ),
 );
+const preparedSet = computed(() => new Set(preparedNames(mine.value).map(normalize)));
+// Preparing is a list edit, like editing it in the sidebar: no undo snapshot.
+const prepare = (spell: SpellSpec) => apply(togglePrepared(mine.value, spell.name));
+
 const privateSet = computed(() => new Set(mine.value.spells));
 const opened = computed(() => (props.open ? normalize(props.open) : null));
 const results = computed(() =>
@@ -174,7 +178,9 @@ function removeClassList(name: string) {
         :key="`${privateSet.has(spell) ? 'p' : 's'}:${spell.name}:${i}`"
         :spell="spell"
         :private="privateSet.has(spell)"
+        :prepared="preparedSet.has(normalize(spell.name))"
         @remove="removeSpell(spell)"
+        @prepare="prepare(spell)"
       />
     </div>
 

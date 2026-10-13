@@ -4,8 +4,8 @@
 import { computed } from 'vue';
 import type { SpellSpec } from '../widgets/spell-spec';
 
-const props = defineProps<{ spell: SpellSpec; private: boolean }>();
-const emit = defineEmits<{ remove: [] }>();
+const props = defineProps<{ spell: SpellSpec; private: boolean; prepared: boolean }>();
+const emit = defineEmits<{ remove: []; prepare: [] }>();
 
 const ORDINALS = ['', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th'];
 const capitalise = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
@@ -22,6 +22,7 @@ const classes = computed(() => props.spell.classes.map(capitalise).join(', '));
   <article class="spell-card">
     <header>
       <h2>{{ spell.name }}</h2>
+      <span v-if="props.prepared" class="prepared-tag">Prepared</span>
       <span v-if="props.private" class="private-tag">Private</span>
     </header>
     <p class="spell-type">{{ type }}</p>
@@ -62,6 +63,14 @@ const classes = computed(() => props.spell.classes.map(capitalise).join(', '));
       </div>
     </template>
     <button
+      type="button"
+      class="prepare"
+      :aria-pressed="props.prepared ? 'true' : 'false'"
+      @click="emit('prepare')"
+    >
+      {{ props.prepared ? 'Unprepare' : 'Prepare' }}
+    </button>
+    <button
       v-if="props.private"
       type="button"
       class="remove"
@@ -92,6 +101,7 @@ h2 {
   font-size: 1.1rem;
   overflow-wrap: anywhere;
 }
+.prepared-tag,
 .private-tag {
   flex: none;
   padding: 0.1rem 0.5rem;
@@ -141,7 +151,9 @@ td {
   text-align: left;
   vertical-align: top;
 }
+.prepare,
 .remove {
   margin-top: 0.75rem;
+  margin-right: 0.5rem;
 }
 </style>

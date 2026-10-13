@@ -376,4 +376,26 @@ describe('sidebar', () => {
     expect(temp()).toBe('Temp HP: 0');
     expect(hpValue(wrapper)).toBe('27 / 27');
   });
+
+  it('adds a spell prepared from its card to the sidebar, without an undo snapshot', async () => {
+    const wrapper = mount(App);
+    await add(wrapper, hpText);
+    const undoBefore = undoButton(wrapper).text();
+    await tab(wrapper, 'Spells').trigger('click');
+    await vi.dynamicImportSettled();
+    await flushPromises();
+    const card = wrapper.findAll('.spell-card').find((c) => c.get('h2').text() === 'Moth Ladder')!;
+    await card.get('button.prepare').trigger('click');
+    await flushPromises();
+    expect(
+      sidebar(wrapper)
+        .findAll('button.prepared-spell')
+        .map((b) => b.text()),
+    ).toStrictEqual(['Moth Ladder']);
+    expect(
+      (wrapper.get('textarea[aria-label="Prepared spell names"]').element as HTMLTextAreaElement)
+        .value,
+    ).toBe('Moth Ladder');
+    expect(undoButton(wrapper).text()).toBe(undoBefore);
+  });
 });
