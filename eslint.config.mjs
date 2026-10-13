@@ -21,6 +21,11 @@ export default tseslint.config(
     languageOptions: { globals: globals.browser },
   },
   {
+    // User text must render as text: v-html would turn a pasted widget name into live HTML.
+    files: ['src/**/*.vue'],
+    rules: { 'vue/no-v-html': 'error' },
+  },
+  {
     files: ['**/*.{js,mjs}', '*.config.ts', 'scripts/**'],
     languageOptions: { globals: globals.node },
   },
