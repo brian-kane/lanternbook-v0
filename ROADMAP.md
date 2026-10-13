@@ -14,12 +14,8 @@ lanternbook is the long-term successor to dnd-command-hub, built one slice at a 
 
 ## Now
 
-- **Slice 2 - Spell lookup.** Read-only and desktop-first.
-  - Only SRD 5.1 spells are in the repo.
-  - Search by name; filter by level and school.
-  - One card per spell: casting time, range, components, duration and text.
-  - Private spells I paste in are kept in browser storage only, never in the repo.
-  - Finish line: I use it at one session next to the old app.
+- **Slice 2 - Spell lookup:** built and deployed, waiting on its finish line (I use it at one session next to dnd-command-hub).
+  - Stop rule: if I did not use it at a session, re-decide before building more.
 
 ## Next
 
