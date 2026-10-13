@@ -157,4 +157,20 @@ describe('browserStore', () => {
       "Couldn't save the last change in this browser; it will be lost when the page closes.",
     );
   });
+
+  it('uses only keys under the lanternbook: prefix', () => {
+    expect(STORAGE_KEY).toBe('lanternbook:board');
+    expect(BACKUP_KEY).toBe('lanternbook:board-backup');
+    const storage = memory({ [STORAGE_KEY]: '{"broken' });
+    const keys: string[] = [];
+    const logged: KeyValueStorage = {
+      getItem: (key) => (keys.push(key), storage.getItem(key)),
+      setItem: (key, value) => (keys.push(key), storage.setItem(key, value)),
+    };
+    const store = browserStore(() => logged);
+    store.load();
+    store.save(sample());
+    expect(new Set(keys)).toStrictEqual(new Set([STORAGE_KEY, BACKUP_KEY]));
+    expect(keys.every((key) => key.startsWith('lanternbook:'))).toBe(true);
+  });
 });

@@ -5,8 +5,10 @@
 import { HISTORY_LIMIT, emptyBoard, type Board, type HistoryEntry, type UndoAction } from './board';
 import { LIMITS, validateWidget, type Widget } from '../widgets/spec';
 
-export const STORAGE_KEY = 'lanternbook.board';
-export const BACKUP_KEY = 'lanternbook.board.unreadable';
+// Every key lives under "lanternbook:", because browser storage is shared by every app on the
+// same origin (see docs/KNOWN-ISSUES.md).
+export const STORAGE_KEY = 'lanternbook:board';
+export const BACKUP_KEY = 'lanternbook:board-backup';
 const STORED_VERSION = 1;
 
 /** The part of the browser's Storage this needs; tests pass an in-memory one. */
