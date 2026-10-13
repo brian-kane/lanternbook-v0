@@ -202,4 +202,35 @@ describe('SpellView', () => {
     expect(wrapper.findAll('.private-tag')).toHaveLength(0);
     expect(localStorage.getItem(SPELLS_BACKUP_KEY)).toContain('Artificer');
   });
+
+  it('renders a spell without tables exactly as before tables existed', async () => {
+    const wrapper = await open();
+    const card = wrapper.findAll('.spell-card').find((c) => c.get('h2').text() === 'Pebble Count')!;
+    expect(card.find('table').exists()).toBe(false);
+    // Comments are Vue's markers for empty v-if blocks: not part of what is shown.
+    const shown = card.html().replace(/\s*<!--[^>]*-->/g, '');
+    expect(shown).toMatchInlineSnapshot(`
+      "<article data-v-9aea437f="" data-v-efa2ae84="" class="spell-card">
+        <header data-v-9aea437f="">
+          <h2 data-v-9aea437f="">Pebble Count</h2>
+        </header>
+        <p data-v-9aea437f="" class="spell-type">1st-level divination (ritual)</p>
+        <dl data-v-9aea437f="">
+          <dt data-v-9aea437f="">Casting time</dt>
+          <dd data-v-9aea437f="" class="casting-time">10 minutes</dd>
+          <dt data-v-9aea437f="">Range</dt>
+          <dd data-v-9aea437f="" class="range">Self</dd>
+          <dt data-v-9aea437f="">Components</dt>
+          <dd data-v-9aea437f="" class="components">V, S, M (a pebble)</dd>
+          <dt data-v-9aea437f="">Duration</dt>
+          <dd data-v-9aea437f="" class="duration">Instantaneous</dd>
+          <dt data-v-9aea437f="">Classes</dt>
+          <dd data-v-9aea437f="" class="classes">Druid</dd>
+        </dl>
+        <p data-v-9aea437f="" class="spell-text">Invented for lanternbook tests. You learn how many pebbles are in a pocket.
+
+          A second paragraph keeps its line break.</p>
+      </article>"
+    `);
+  });
 });
