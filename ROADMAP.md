@@ -14,13 +14,13 @@ lanternbook is the long-term successor to dnd-command-hub, built one slice at a 
 
 What I use in a session. I edit this list; nothing is added to it without my say. Switchover means every item I keep on the list works in lanternbook.
 
-- Live HP: built (rehearsed once).
-- Temp HP.
-- Spell slots by level: built (rehearsed once).
-- Resource counters (Wild Shape uses and the like): built (rehearsed once).
-- Short and long rest: built (rehearsed once).
-- Spell text lookup: built (rehearsed once).
-- Prepared spell list: built (rehearsed once).
+- Live HP: built.
+- Temp HP: built.
+- Spell slots by level: built.
+- Resource counters (Wild Shape uses and the like): built.
+- Short and long rest: built.
+- Spell text lookup: built.
+- Prepared spell list: built.
 - Wild Shape current form and its HP.
 - Companion stat block.
 - Homebrew items.
@@ -32,10 +32,11 @@ What I use in a session. I edit this list; nothing is added to it without my say
 
 ## Now
 
-- **Slice 4b - single-step HP buttons use the damage rule; spell slots form.**
+- **Slice 4b - single-step HP buttons use the damage rule; spell slots form:** built and deployed.
 - **Slice 4 - temp HP, Prepare button, New counter form:** built and deployed.
-- **Slice 3 - Table sidebar:** built, deployed and rehearsed once; rehearsal notes pending.
-- **Slice 2 - Spell lookup:** built and deployed, waiting on its desk rehearsal.
+- **Slice 3 - Table sidebar:** built and deployed.
+- **Slice 2 - Spell lookup:** built and deployed.
+- Each slice was checked in the browser after deploy. The desk rehearsal (replaying one real round of combat in lanternbook alone, with dnd-command-hub closed) has not been done; it is optional before the next large slice. lanternbook has not been used at a session.
 
 ## Next
 
