@@ -22,8 +22,8 @@ beforeEach(() => {
   localStorage.clear();
 });
 
-async function open(): Promise<VueWrapper> {
-  const wrapper = mount(SpellView);
+async function open(props: { open?: string | null } = {}): Promise<VueWrapper> {
+  const wrapper = mount(SpellView, { props });
   await vi.dynamicImportSettled();
   await flushPromises();
   return wrapper;
@@ -258,5 +258,18 @@ describe('SpellView', () => {
     expect(card.get('.spell-text').text()).not.toContain('Very many');
     const order = card.findAll('.spell-text, .table-scroll').map((el) => el.classes()[0]);
     expect(order).toStrictEqual(['spell-text', 'table-scroll', 'table-scroll']);
+  });
+
+  it('shows just the named spell when opened on one, ignoring case and apostrophes', async () => {
+    const wrapper = await open({ open: 'won’t stay lit' });
+    expect(names(wrapper)).toStrictEqual(["Won't Stay Lit"]);
+    await wrapper.get('button.show-all').trigger('click');
+    expect(wrapper.emitted('close')).toHaveLength(1);
+  });
+
+  it('says so when the spell it was opened on does not exist', async () => {
+    const wrapper = await open({ open: 'Not A Spell' });
+    expect(names(wrapper)).toStrictEqual([]);
+    expect(wrapper.get('.result-count').text()).toBe('No spell named “Not A Spell” was found.');
   });
 });

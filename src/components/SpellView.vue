@@ -2,8 +2,10 @@
 // The spell tab: SRD 5.1 spells plus the person's private ones, filtered by name, level, school
 // and class. The SRD data loads here, on demand, so it is not part of the startup bundle.
 import { computed, onMounted, ref, shallowRef } from 'vue';
-import { filterSpells, normalize, unmatchedNames, type ClassLists } from '../spells/filter';
-import { privateSpellStore, type PrivateSpells } from '../spells/store';
+import { filterSpells, normalize, unmatchedNames } from '../spells/filter';
+import { setClassList } from '../spells/prepared';
+import { usePrivateSpells } from '../spells/private-state';
+import { loadSrdSpells } from '../spells/srd';
 import {
   SCHOOLS,
   parseClassList,
@@ -13,17 +15,20 @@ import {
 } from '../widgets/spell-spec';
 import SpellCard from './SpellCard.vue';
 
-const store = privateSpellStore();
-const loaded = store.load();
-const mine = shallowRef<PrivateSpells>(loaded.data);
-const notice = ref<string | null>(loaded.notice);
+/** open: show just the spell with this name (from the sidebar); close asks to show all again. */
+const props = defineProps<{ open?: string | null }>();
+const emit = defineEmits<{ close: [] }>();
+
+// Shared with the sidebar when App provides it; App then shows the notice.
+const { state, shared } = usePrivateSpells();
+const mine = state.data;
+const notice = state.notice;
 
 const srd = shallowRef<SpellSpec[]>([]);
 const loading = ref(true);
 onMounted(async () => {
   try {
-    // Checked by src/spells/content.test.ts, so the data is known to be valid spell specs.
-    srd.value = (await import('../spells/data/srd-spells.json')).default as SpellSpec[];
+    srd.value = await loadSrdSpells();
   } catch {
     notice.value =
       "The SRD spells couldn't be loaded. Check the connection and open the tab again.";
@@ -68,28 +73,32 @@ const unmatched = computed(() =>
   ),
 );
 const privateSet = computed(() => new Set(mine.value.spells));
+const opened = computed(() => (props.open ? normalize(props.open) : null));
 const results = computed(() =>
-  filterSpells(
-    allSpells.value,
-    {
-      search: search.value,
-      level: level.value === '' ? null : Number(level.value),
-      school: school.value === '' ? null : school.value,
-      className: className.value === '' ? null : className.value,
-    },
-    mine.value.classLists,
-  ),
+  opened.value !== null
+    ? filterSpells(
+        allSpells.value.filter((s) => normalize(s.name) === opened.value),
+        { search: '', level: null, school: null, className: null },
+      )
+    : filterSpells(
+        allSpells.value,
+        {
+          search: search.value,
+          level: level.value === '' ? null : Number(level.value),
+          school: school.value === '' ? null : school.value,
+          className: className.value === '' ? null : className.value,
+        },
+        mine.value.classLists,
+      ),
 );
 const countText = computed(() => {
   const n = results.value.length;
+  if (opened.value !== null && n === 0) return `No spell named “${props.open}” was found.`;
   if (n === 0) return 'No spells match.';
   return n === 1 ? '1 spell' : `${n} spells`;
 });
 
-function apply(next: PrivateSpells) {
-  mine.value = next;
-  notice.value = store.save(next) ?? notice.value;
-}
+const apply = state.apply;
 
 const spellText = ref('');
 const spellErrors = ref<string[]>([]);
@@ -111,11 +120,6 @@ function removeSpell(spell: SpellSpec) {
 const listName = ref('');
 const listText = ref('');
 const listErrors = ref<string[]>([]);
-function withoutList(lists: ClassLists, name: string): ClassLists {
-  return Object.fromEntries(
-    Object.entries(lists).filter(([key]) => normalize(key) !== normalize(name)),
-  );
-}
 function saveClassList() {
   const result = parseClassList(listName.value, listText.value);
   if (!result.ok) {
@@ -125,21 +129,23 @@ function saveClassList() {
   listErrors.value = [];
   listName.value = '';
   listText.value = '';
-  const classLists = { ...withoutList(mine.value.classLists, result.className) };
-  classLists[result.className] = result.names;
+  const classLists = setClassList(mine.value.classLists, result.className, result.names);
   apply({ ...mine.value, classLists });
 }
 function removeClassList(name: string) {
   if (normalize(className.value) === normalize(name)) className.value = '';
-  apply({ ...mine.value, classLists: withoutList(mine.value.classLists, name) });
+  apply({ ...mine.value, classLists: setClassList(mine.value.classLists, name, null) });
 }
 </script>
 
 <template>
   <div class="spell-view">
-    <p v-if="notice" class="notice" role="status">{{ notice }}</p>
+    <p v-if="notice && !shared" class="notice" role="status">{{ notice }}</p>
 
-    <div class="filters" role="search">
+    <p v-if="open" class="opened">
+      <button type="button" class="show-all" @click="emit('close')">Show all spells</button>
+    </p>
+    <div v-else class="filters" role="search">
       <input
         v-model="search"
         type="search"
