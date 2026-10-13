@@ -1,12 +1,18 @@
-import { mount, type VueWrapper } from '@vue/test-utils';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { flushPromises, mount, type VueWrapper } from '@vue/test-utils';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import counterText from './widgets/fixtures/counter.json?raw';
 import checklistText from './widgets/fixtures/checklist.json?raw';
 import { STORAGE_KEY } from './board/storage';
 import App from './App.vue';
 
+// Tests use invented spells only: the bundled SRD data is swapped for the fixture spells.
+vi.mock('./spells/data/srd-spells.json', async () => ({
+  default: JSON.parse((await import('./spells/fixtures/invented-spells.json?raw')).default),
+}));
+
 beforeEach(() => {
   localStorage.clear();
+  history.replaceState(null, '', '/');
 });
 
 async function add(wrapper: VueWrapper, text: string) {
@@ -132,5 +138,40 @@ describe('App', () => {
     expect(wrapper.get('h1').text()).toBe('lanternbook');
     expect(wrapper.get('[role="status"]').text()).toContain("Saved widgets couldn't be read");
     expect(wrapper.findAll('.widget')).toHaveLength(0);
+  });
+});
+
+describe('App tabs', () => {
+  const tab = (wrapper: VueWrapper, label: string) =>
+    wrapper.findAll('[role="tab"]').find((t) => t.text() === label)!;
+
+  it('opens on the board, with a Spells tab beside it', () => {
+    const wrapper = mount(App);
+    expect(tab(wrapper, 'Board').attributes('aria-selected')).toBe('true');
+    expect(tab(wrapper, 'Spells').attributes('aria-selected')).toBe('false');
+    expect(wrapper.find('.spell-view').exists()).toBe(false);
+  });
+
+  it('switches to the spell view and back, keeping the board', async () => {
+    const wrapper = mount(App);
+    await add(wrapper, counterText);
+    await tab(wrapper, 'Spells').trigger('click');
+    await vi.dynamicImportSettled();
+    await flushPromises();
+    expect(wrapper.find('.spell-view').exists()).toBe(true);
+    expect(wrapper.findAll('.spell-card').length).toBeGreaterThan(0);
+    expect(location.hash).toBe('#spells');
+    await tab(wrapper, 'Board').trigger('click');
+    expect(wrapper.findAll('.widget')).toHaveLength(1);
+    expect(location.hash).toBe('');
+  });
+
+  it('opens straight on the spell view from a #spells link', async () => {
+    history.replaceState(null, '', '/#spells');
+    const wrapper = mount(App);
+    await vi.dynamicImportSettled();
+    await flushPromises();
+    expect(tab(wrapper, 'Spells').attributes('aria-selected')).toBe('true');
+    expect(wrapper.find('.spell-view').exists()).toBe(true);
   });
 });

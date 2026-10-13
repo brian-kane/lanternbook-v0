@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, shallowRef } from 'vue';
+import { computed, defineAsyncComponent, ref, shallowRef } from 'vue';
 import WidgetFrame from './components/WidgetFrame.vue';
 import {
   addWidget,
@@ -13,6 +13,19 @@ import {
 import { browserStore } from './board/storage';
 import type { RestKind } from './rules/rest';
 import { parseSpecText } from './widgets/spec';
+
+// Loaded only when the Spells tab opens, so the spell view and the SRD data stay out of startup.
+const SpellView = defineAsyncComponent(() => import('./components/SpellView.vue'));
+
+type Tab = 'board' | 'spells';
+const SPELLS_HASH = '#spells';
+const tab = ref<Tab>(location.hash === SPELLS_HASH ? 'spells' : 'board');
+function show(next: Tab) {
+  tab.value = next;
+  // The hash makes the spell view linkable; it is not a router.
+  const url = next === 'spells' ? SPELLS_HASH : location.pathname + location.search;
+  history.replaceState(null, '', url);
+}
 
 const store = browserStore();
 const loaded = store.load();
@@ -44,45 +57,63 @@ const undoText = computed(() => undoLabel(board.value));
 </script>
 
 <template>
-  <main>
-    <h1>lanternbook</h1>
-    <p v-if="notice" class="notice" role="status">{{ notice }}</p>
+  <main :class="{ wide: tab === 'spells' }">
+    <header class="top">
+      <h1>lanternbook</h1>
+      <nav class="tabs" role="tablist" aria-label="Views">
+        <button
+          v-for="t in ['board', 'spells'] as const"
+          :key="t"
+          type="button"
+          role="tab"
+          :aria-selected="tab === t ? 'true' : 'false'"
+          @click="show(t)"
+        >
+          {{ t === 'board' ? 'Board' : 'Spells' }}
+        </button>
+      </nav>
+    </header>
 
-    <div class="add-form">
-      <label for="spec">Paste a widget spec (see docs/EXAMPLES.md)</label>
-      <textarea
-        id="spec"
-        v-model="specText"
-        aria-label="Widget spec"
-        rows="6"
-        spellcheck="false"
-        autocapitalize="off"
-        autocomplete="off"
-      ></textarea>
-      <button type="button" class="add" @click="add">Add widget</button>
-      <ul v-if="errors.length" class="errors" role="alert">
-        <li v-for="(error, i) in errors" :key="i">{{ error }}</li>
-      </ul>
-    </div>
+    <SpellView v-if="tab === 'spells'" />
+    <template v-else>
+      <p v-if="notice" class="notice" role="status">{{ notice }}</p>
 
-    <p v-if="board.widgets.length === 0" class="hint">No widgets yet.</p>
-    <div class="widgets">
-      <WidgetFrame
-        v-for="widget in board.widgets"
-        :key="widget.id"
-        :widget="widget"
-        @step="(id, delta) => apply(stepCounter(board, id, delta))"
-        @toggle="(id, index) => apply(toggleItem(board, id, index))"
-      />
-    </div>
+      <div class="add-form">
+        <label for="spec">Paste a widget spec (see docs/EXAMPLES.md)</label>
+        <textarea
+          id="spec"
+          v-model="specText"
+          aria-label="Widget spec"
+          rows="6"
+          spellcheck="false"
+          autocapitalize="off"
+          autocomplete="off"
+        ></textarea>
+        <button type="button" class="add" @click="add">Add widget</button>
+        <ul v-if="errors.length" class="errors" role="alert">
+          <li v-for="(error, i) in errors" :key="i">{{ error }}</li>
+        </ul>
+      </div>
 
-    <nav class="actions" aria-label="Board actions">
-      <button type="button" @click="rest('short')">Short rest</button>
-      <button type="button" @click="rest('long')">Long rest</button>
-      <button type="button" class="undo" :disabled="!undoText" @click="apply(undo(board))">
-        {{ undoText ?? 'Undo' }}
-      </button>
-    </nav>
+      <p v-if="board.widgets.length === 0" class="hint">No widgets yet.</p>
+      <div class="widgets">
+        <WidgetFrame
+          v-for="widget in board.widgets"
+          :key="widget.id"
+          :widget="widget"
+          @step="(id, delta) => apply(stepCounter(board, id, delta))"
+          @toggle="(id, index) => apply(toggleItem(board, id, index))"
+        />
+      </div>
+
+      <nav class="actions" aria-label="Board actions">
+        <button type="button" @click="rest('short')">Short rest</button>
+        <button type="button" @click="rest('long')">Long rest</button>
+        <button type="button" class="undo" :disabled="!undoText" @click="apply(undo(board))">
+          {{ undoText ?? 'Undo' }}
+        </button>
+      </nav>
+    </template>
   </main>
 </template>
 
@@ -125,9 +156,27 @@ main {
   display: grid;
   gap: 1rem;
 }
+main.wide {
+  max-width: 80rem;
+}
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
 h1 {
   margin: 0;
   font-size: 1.4rem;
+}
+.tabs {
+  display: flex;
+  gap: 0.25rem;
+}
+.tabs [aria-selected='true'] {
+  font-weight: 700;
+  border-width: 2px;
 }
 .notice {
   margin: 0;
