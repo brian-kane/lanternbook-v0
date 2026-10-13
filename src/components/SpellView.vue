@@ -2,7 +2,7 @@
 // The spell tab: SRD 5.1 spells plus the person's private ones, filtered by name, level, school
 // and class. The SRD data loads here, on demand, so it is not part of the startup bundle.
 import { computed, onMounted, ref, shallowRef } from 'vue';
-import { filterSpells, normalize, type ClassLists } from '../spells/filter';
+import { filterSpells, normalize, unmatchedNames, type ClassLists } from '../spells/filter';
 import { privateSpellStore, type PrivateSpells } from '../spells/store';
 import {
   SCHOOLS,
@@ -57,10 +57,20 @@ const classOptions = computed(() => {
   return options.sort((a, b) => a.label.localeCompare(b.label, 'en'));
 });
 
+const allSpells = computed(() => [...srd.value, ...mine.value.spells]);
+/** For each private class list, the names that match no SRD or private spell. */
+const unmatched = computed(() =>
+  Object.fromEntries(
+    Object.entries(mine.value.classLists).map(([name, names]) => [
+      name,
+      unmatchedNames(names, allSpells.value),
+    ]),
+  ),
+);
 const privateSet = computed(() => new Set(mine.value.spells));
 const results = computed(() =>
   filterSpells(
-    [...srd.value, ...mine.value.spells],
+    allSpells.value,
     {
       search: search.value,
       level: level.value === '' ? null : Number(level.value),
@@ -203,6 +213,9 @@ function removeClassList(name: string) {
       <ul v-if="Object.keys(mine.classLists).length" class="lists">
         <li v-for="(names, name) in mine.classLists" :key="name">
           {{ name }} ({{ names.length }} spells)
+          <span v-if="!loading && unmatched[name]?.length" class="class-list-unmatched">
+            Not found in the SRD or your private spells: {{ unmatched[name]!.join(', ') }}
+          </span>
           <button
             type="button"
             :aria-label="`Remove class list ${name}`"
@@ -270,6 +283,10 @@ function removeClassList(name: string) {
 .errors {
   margin: 0;
   padding-left: 1.25rem;
+  color: var(--error);
+}
+.class-list-unmatched {
+  display: block;
   color: var(--error);
 }
 .hint {

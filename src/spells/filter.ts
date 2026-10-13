@@ -41,3 +41,9 @@ export function filterSpells<T extends SpellSpec>(
     )
     .sort((a, b) => a.level - b.level || a.name.localeCompare(b.name, 'en'));
 }
+
+/** The names on a class list that match no spell, so the person can be told rather than guess. */
+export function unmatchedNames(names: readonly string[], spells: readonly SpellSpec[]): string[] {
+  const known = new Set(spells.map((s) => normalize(s.name)));
+  return names.filter((name) => !known.has(normalize(name)));
+}

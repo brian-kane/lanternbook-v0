@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import inventedText from './fixtures/invented-spells.json?raw';
 import casesText from './fixtures/filter-cases.json?raw';
-import { filterSpells, type ClassLists, type SpellQuery } from './filter';
+import { filterSpells, unmatchedNames, type ClassLists, type SpellQuery } from './filter';
 import type { SpellSpec } from '../widgets/spell-spec';
 
 const spells: SpellSpec[] = JSON.parse(inventedText);
@@ -25,5 +25,20 @@ describe('filterSpells', () => {
     const result = filterSpells(input, golden.cases[0]!.query, {});
     expect(result.every((s) => spells.includes(s))).toBe(true);
     expect(input).toStrictEqual(spells);
+  });
+});
+
+describe('unmatchedNames', () => {
+  it('returns the names that match no spell, in the order given, ignoring case and apostrophes', () => {
+    expect(
+      unmatchedNames(
+        ['moth ladder', 'Not A Spell', 'WON’T STAY LIT', ' Ash Whistle ', 'Lost'],
+        spells,
+      ),
+    ).toStrictEqual(['Not A Spell', 'Lost']);
+  });
+
+  it('returns nothing when every name matches', () => {
+    expect(unmatchedNames(['Lantern Hum'], spells)).toStrictEqual([]);
   });
 });

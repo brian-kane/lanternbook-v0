@@ -171,4 +171,35 @@ describe('SpellView', () => {
     const shown = wrapper.get('footer.attribution').text().replace(/[“”]/g, '"');
     expect(shown).toBe(statement);
   });
+
+  it('makes a class the SRD does not cover filterable from a pasted list, and reports unmatched names', async () => {
+    const wrapper = await open();
+    await pasteSpell(wrapper, JSON.stringify(privateSpell));
+    await wrapper.get('input[aria-label="Class name"]').setValue('Artificer');
+    await wrapper
+      .get('textarea[aria-label="Spell names"]')
+      .setValue('moth ladder\nQuiet Kettle\nNot A Spell\nAsh Whistle\nAlso Missing');
+    await wrapper.get('button.save-class-list').trigger('click');
+
+    await wrapper.get('select[aria-label="Class"]').setValue('Artificer');
+    expect(names(wrapper)).toStrictEqual(['Quiet Kettle', 'Ash Whistle', 'Moth Ladder']);
+    expect(wrapper.get('.class-list-unmatched').text()).toBe(
+      'Not found in the SRD or your private spells: Not A Spell, Also Missing',
+    );
+  });
+
+  it('starts with no private spells or class lists, and a notice, when private data is corrupt', async () => {
+    localStorage.setItem(SPELLS_KEY, '{"version": 1, "spells": [], "classLists": {"Artificer": [');
+    const wrapper = await open();
+    expect(wrapper.get('[role="status"]').text()).toContain(
+      "Saved private spells couldn't be read",
+    );
+    const options = wrapper
+      .get('select[aria-label="Class"]')
+      .findAll('option')
+      .map((o) => o.text());
+    expect(options.some((o) => o.includes('private list'))).toBe(false);
+    expect(wrapper.findAll('.private-tag')).toHaveLength(0);
+    expect(localStorage.getItem(SPELLS_BACKUP_KEY)).toContain('Artificer');
+  });
 });
