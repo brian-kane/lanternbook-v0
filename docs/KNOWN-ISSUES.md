@@ -5,6 +5,12 @@
 - What: `typescript` stays at 6.0.3 because typescript-eslint 8.71.1 declares a peer range of `>=4.8.4 <6.1.0`. Dependabot ignores TypeScript major and minor updates, so only 6.0.x patches come through; see the comment in [.github/dependabot.yml](../.github/dependabot.yml).
 - Revisit: when typescript-eslint supports TypeScript 7 (its `peerDependencies.typescript` range includes 7), lift the Dependabot ignore and update both together. Whichever typescript-eslint release first allows 6.1 also ends the minor ignore.
 
+## Saved widgets share an origin with every other Pages site of this account
+
+- What: the site is served from `https://<owner>.github.io/lanternbook/`. Browser storage is per origin, and `<owner>.github.io` is the origin of every GitHub Pages project site this account publishes. Any of those sites can read, overwrite or clear lanternbook's saved widgets, and lanternbook could do the same to theirs. The service worker is scoped to `/lanternbook/`, but storage is not.
+- Mitigation now: every key lanternbook writes starts with `lanternbook:`, so accidental collisions are unlikely. That does not stop a site that reads or clears storage on purpose, and nothing sensitive should be stored.
+- Fix: serve the app from its own origin (a custom domain for this repo's Pages, or another static host). Revisit before the app stores anything that matters, or before other Pages sites with scripts are published from the same account.
+
 ## @types/node stays on the Node major
 
 - Bump `@types/node` to a new major only together with the Node major in the dev container image, `.nvmrc` and `package.json` engines; Dependabot ignores its majors until then (see [.github/dependabot.yml](../.github/dependabot.yml)).

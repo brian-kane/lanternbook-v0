@@ -46,6 +46,15 @@ These are GitHub settings to click through in the web UI. Nothing here is applie
   - Why: a third-party action is code from a stranger running with this repo's token. Anything else needs a deliberate entry here first.
   - Verify: the run C annotation above quotes this rule ("must be from a repository owned by brian-kane or created by GitHub"). A direct proof would be a SHA-pinned third-party action on a throwaway branch; GitHub should refuse to start it.
 
+- [ ] **Pages publishes from GitHub Actions**
+  - Where: Pages, then Build and deployment, then Source: "GitHub Actions".
+  - Why: the `deploy` job in [ci.yml](../.github/workflows/ci.yml) publishes the built site; there is no branch to publish from.
+  - Verify: the Pages page shows Source: GitHub Actions, and after the next push to main it shows "Your site is live at https://brian-kane.github.io/lanternbook/". The `deploy` job of that CI run is green and links to the same URL.
+- [ ] **The `github-pages` environment deploys from main only**
+  - Where: Environments, then `github-pages` (created when the source above is set), then Deployment branches and tags: "Selected branches and tags", with one rule for `main`. Remove any other rule.
+  - Why: a second lock behind the job's own `if:`. Even a workflow change that let a branch run `deploy` could not publish from it.
+  - Verify: the environment lists exactly one deployment branch rule, `main`. In Settings, then Environments, the `github-pages` deployment history shows only `main`.
+
 ## After there is code
 
 - [ ] **CodeQL default setup**: Code security, then Code scanning, then set up Default. Not useful until there is code to analyse.

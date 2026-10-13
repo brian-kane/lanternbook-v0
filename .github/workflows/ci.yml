@@ -154,6 +154,15 @@ jobs:
             echo "::error::build produced no index.html or no JavaScript"
             exit 1
           fi
+      - name: Every built URL is under the base path
+        run: pnpm check:base
+      # Only main publishes; the deploy job below picks this artifact up after every check passes.
+      - name: Upload the site for GitHub Pages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        # actions/upload-pages-artifact v5.0.0
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9
+        with:
+          path: dist
 
   perf-budget:
     runs-on: ubuntu-24.04
@@ -195,3 +204,34 @@ jobs:
       - uses: ./.github/actions/setup
       - name: pnpm audit (all dependencies, non-blocking)
         run: pnpm audit
+
+  # Publishes the site built by the build job. The only job with write access, and only to Pages.
+  deploy:
+    needs:
+      - gitleaks
+      - actionlint
+      - prettier
+      - lint
+      - typecheck
+      - test
+      - build
+      - perf-budget
+      - audit-prod
+      - audit-all
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    # One deploy at a time; a deploy that has started is allowed to finish.
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - id: deployment
+        # actions/deploy-pages v5.0.1
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346
